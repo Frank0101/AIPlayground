@@ -1,0 +1,3 @@
+# Tools for downloading, running, quantising, and
+# fine-tuning language models locally on Apple Silicon
+mlx-lm[train]==0.31.3

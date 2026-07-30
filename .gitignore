@@ -1,1 +1,15 @@
+# Python
 .venv/
+__pycache__/
+*.py[cod]
+
+# Downloaded models and training outputs
+.hf-cache/
+models/
+adapters/
+checkpoints/
+*.safetensors
+*.gguf
+
+# macOS
+.DS_Store
