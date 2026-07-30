@@ -3,13 +3,8 @@
 __pycache__/
 *.py[cod]
 
-# Downloaded models and training outputs
+# Downloaded models
 .hf-cache/
-models/
-adapters/
-checkpoints/
-*.safetensors
-*.gguf
 
 # macOS
 .DS_Store

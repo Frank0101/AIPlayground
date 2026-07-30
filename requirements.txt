@@ -1,3 +1,4 @@
-# Tools for downloading, running, quantising, and
-# fine-tuning language models locally on Apple Silicon
+# mlx-lm: download, run, quantise, and fine-tune language models locally
+# on Apple Silicon via Apple's MLX framework. The [train] extra adds the
+# dependencies needed for fine-tuning (LoRA/QLoRA), not just inference.
 mlx-lm[train]==0.31.3
