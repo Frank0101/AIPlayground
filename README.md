@@ -23,6 +23,11 @@ when the script exits.
 - **02 - Sampling temperature**: same model and prompt as experiment 01, but
   with `--temp 0.7` instead of the default 0.0, so the response can differ
   between runs.
+- **03 - Chat**: a back-and-forth conversation instead of a single prompt.
+  `mlx_lm.generate` has no memory between calls, so the script builds a
+  growing transcript itself and re-sends the whole thing each turn. After
+  the first turn, `HF_HUB_OFFLINE=1` skips Hugging Face's cache-validation
+  network check on later turns.
 
 ## Glossary
 
@@ -42,6 +47,13 @@ when the script exits.
 - **Parameters**: the numerical values learned during training that
   determine how a model processes input and generates output.
 - **Hugging Face**: a platform/repository where models, datasets, and
-  tokenisers are published and downloaded from.
+  tokenisers are published and downloaded from. By default, loading a model
+  checks the Hub for the current file list/etags even if it's already
+  cached locally — `HF_HUB_OFFLINE=1` skips that check and forces loading
+  straight from the local cache.
 - **MLX**: Apple's array/ML framework for running models efficiently on
   Apple Silicon.
+- **Statelessness**: a model call has no memory of previous calls — each
+  `mlx_lm.generate` invocation starts fresh. A "conversation" only works
+  because the caller re-sends the growing transcript as context every turn;
+  `mlx_lm.chat` does this bookkeeping for you.
