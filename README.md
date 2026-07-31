@@ -28,6 +28,10 @@ when the script exits.
   growing transcript itself and re-sends the whole thing each turn. After
   the first turn, `HF_HUB_OFFLINE=1` skips Hugging Face's cache-validation
   network check on later turns.
+- **04 - Eval**: a minimal custom eval — a handful of prompts with known-good
+  answers, run at temperature 0 and graded automatically by checking whether
+  the expected text appears in the response. No extra dependencies, unlike
+  standard benchmark suites (see `mlx_lm.evaluate` in the glossary).
 
 ## Glossary
 
@@ -57,3 +61,11 @@ when the script exits.
   `mlx_lm.generate` invocation starts fresh. A "conversation" only works
   because the caller re-sends the growing transcript as context every turn;
   `mlx_lm.chat` does this bookkeeping for you.
+- **Eval**: a test of model quality — a set of inputs with known-good (or
+  gradeable) outputs, scored automatically. Ranges from a handful of custom
+  prompts with substring/exact-match grading to standard published
+  benchmarks (MMLU, GSM8K, ...) run via a harness.
+- **`mlx_lm.evaluate`**: mlx-lm's CLI for running a model against standard
+  benchmark suites. It wraps EleutherAI's `lm-eval` harness, which isn't
+  installed here yet (not in `requirements.txt`) since experiment 04 uses a
+  custom eval instead.
