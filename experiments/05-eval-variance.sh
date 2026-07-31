@@ -39,16 +39,16 @@ TEMP=0.7
 PASSES=5
 
 cleanup() {
-    echo
-    echo "==> Removing downloaded model and experiment cache..."
-    rm -rf "$CACHE"
+	echo
+	echo "==> Removing downloaded model and experiment cache..."
+	rm -rf "$CACHE"
 }
 trap cleanup EXIT
 
 if [[ ! -x "$VENV/bin/mlx_lm.generate" ]]; then
-    echo "Error: the project environment is not ready." >&2
-    echo "Run ./setup.sh first." >&2
-    exit 1
+	echo "Error: the project environment is not ready." >&2
+	echo "Run ./setup.sh first." >&2
+	exit 1
 fi
 
 echo "==> Running eval"
@@ -64,41 +64,41 @@ PASS_COUNT=0
 OFFLINE=0
 
 for SEED in $(seq 0 $((PASSES - 1))); do
-    RESPONSE=$(HF_HOME="$CACHE" HF_HUB_OFFLINE="$OFFLINE" "$VENV/bin/mlx_lm.generate" \
-        --model "$MODEL" \
-        --prompt "$PROMPT" \
-        --max-tokens "$MAX_TOKENS" \
-        --temp "$TEMP" \
-        --seed "$SEED" \
-        --verbose False)
-    OFFLINE=1
+	RESPONSE=$(HF_HOME="$CACHE" HF_HUB_OFFLINE="$OFFLINE" "$VENV/bin/mlx_lm.generate" \
+		--model "$MODEL" \
+		--prompt "$PROMPT" \
+		--max-tokens "$MAX_TOKENS" \
+		--temp "$TEMP" \
+		--seed "$SEED" \
+		--verbose False)
+	OFFLINE=1
 
-    # Case-insensitive substring check, done with tr rather than bash's
-    # ${VAR,,} since macOS ships bash 3.2, which doesn't support it.
-    RESPONSE_LOWER=$(printf '%s' "$RESPONSE" | tr '[:upper:]' '[:lower:]')
+	# Case-insensitive substring check, done with tr rather than bash's
+	# ${VAR,,} since macOS ships bash 3.2, which doesn't support it.
+	RESPONSE_LOWER=$(printf '%s' "$RESPONSE" | tr '[:upper:]' '[:lower:]')
 
-    REASON=""
-    for KEYWORD in "${REQUIRED_KEYWORDS[@]}"; do
-        if [[ "$RESPONSE_LOWER" != *"$KEYWORD"* ]]; then
-            REASON="missing required \"$KEYWORD\""
-            break
-        fi
-    done
-    if [[ -z "$REASON" ]]; then
-        for KEYWORD in "${FORBIDDEN_KEYWORDS[@]}"; do
-            if [[ "$RESPONSE_LOWER" == *"$KEYWORD"* ]]; then
-                REASON="contains forbidden \"$KEYWORD\""
-                break
-            fi
-        done
-    fi
+	REASON=""
+	for KEYWORD in "${REQUIRED_KEYWORDS[@]}"; do
+		if [[ "$RESPONSE_LOWER" != *"$KEYWORD"* ]]; then
+			REASON="missing required \"$KEYWORD\""
+			break
+		fi
+	done
+	if [[ -z "$REASON" ]]; then
+		for KEYWORD in "${FORBIDDEN_KEYWORDS[@]}"; do
+			if [[ "$RESPONSE_LOWER" == *"$KEYWORD"* ]]; then
+				REASON="contains forbidden \"$KEYWORD\""
+				break
+			fi
+		done
+	fi
 
-    if [[ -z "$REASON" ]]; then
-        echo "PASS  (seed $SEED): $RESPONSE"
-        PASS_COUNT=$((PASS_COUNT + 1))
-    else
-        echo "FAIL  (seed $SEED, $REASON): $RESPONSE"
-    fi
+	if [[ -z "$REASON" ]]; then
+		echo "PASS  (seed $SEED): $RESPONSE"
+		PASS_COUNT=$((PASS_COUNT + 1))
+	else
+		echo "FAIL  (seed $SEED, $REASON): $RESPONSE"
+	fi
 done
 
 echo

@@ -28,16 +28,16 @@ MAX_TOKENS=300
 TEMP=0.7
 
 cleanup() {
-    echo
-    echo "==> Removing downloaded model and experiment cache..."
-    rm -rf "$CACHE"
+	echo
+	echo "==> Removing downloaded model and experiment cache..."
+	rm -rf "$CACHE"
 }
 trap cleanup EXIT
 
 if [[ ! -x "$VENV/bin/mlx_lm.generate" ]]; then
-    echo "Error: the project environment is not ready." >&2
-    echo "Run ./setup.sh first." >&2
-    exit 1
+	echo "Error: the project environment is not ready." >&2
+	echo "Run ./setup.sh first." >&2
+	exit 1
 fi
 
 echo "==> Starting chat"
@@ -50,23 +50,23 @@ HISTORY=""
 OFFLINE=0
 
 while read -r -p "You: " INPUT; do
-    [[ -z "$INPUT" || "$INPUT" == "exit" || "$INPUT" == "quit" ]] && break
+	[[ -z "$INPUT" || "$INPUT" == "exit" || "$INPUT" == "quit" ]] && break
 
-    HISTORY+="User: $INPUT"$'\n'"Assistant:"
+	HISTORY+="User: $INPUT"$'\n'"Assistant:"
 
-    RESPONSE=$(HF_HOME="$CACHE" HF_HUB_OFFLINE="$OFFLINE" "$VENV/bin/mlx_lm.generate" \
-        --model "$MODEL" \
-        --prompt "$HISTORY" \
-        --max-tokens "$MAX_TOKENS" \
-        --temp "$TEMP" \
-        --verbose False)
+	RESPONSE=$(HF_HOME="$CACHE" HF_HUB_OFFLINE="$OFFLINE" "$VENV/bin/mlx_lm.generate" \
+		--model "$MODEL" \
+		--prompt "$HISTORY" \
+		--max-tokens "$MAX_TOKENS" \
+		--temp "$TEMP" \
+		--verbose False)
 
-    # After the first turn the model is cached, so later turns skip the
-    # Hub's file-list/etag check and load straight from $CACHE.
-    OFFLINE=1
+	# After the first turn the model is cached, so later turns skip the
+	# Hub's file-list/etag check and load straight from $CACHE.
+	OFFLINE=1
 
-    echo "Assistant:$RESPONSE"
-    echo
+	echo "Assistant:$RESPONSE"
+	echo
 
-    HISTORY+=" $RESPONSE"$'\n'
+	HISTORY+=" $RESPONSE"$'\n'
 done

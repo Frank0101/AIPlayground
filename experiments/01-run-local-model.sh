@@ -21,16 +21,16 @@ PROMPT="Explain the difference between synchronous and asynchronous processing i
 MAX_TOKENS=300
 
 cleanup() {
-    echo
-    echo "==> Removing downloaded model and experiment cache..."
-    rm -rf "$CACHE"
+	echo
+	echo "==> Removing downloaded model and experiment cache..."
+	rm -rf "$CACHE"
 }
 trap cleanup EXIT
 
 if [[ ! -x "$VENV/bin/mlx_lm.generate" ]]; then
-    echo "Error: the project environment is not ready." >&2
-    echo "Run ./setup.sh first." >&2
-    exit 1
+	echo "Error: the project environment is not ready." >&2
+	echo "Run ./setup.sh first." >&2
+	exit 1
 fi
 
 echo "==> Running local model"
@@ -41,7 +41,7 @@ echo
 
 # HF_HOME redirects MLX-LM's Hugging Face cache to this experiment's folder.
 HF_HOME="$CACHE" \
-"$VENV/bin/mlx_lm.generate" \
-    --model "$MODEL" \
-    --prompt "$PROMPT" \
-    --max-tokens "$MAX_TOKENS"
+	"$VENV/bin/mlx_lm.generate" \
+	--model "$MODEL" \
+	--prompt "$PROMPT" \
+	--max-tokens "$MAX_TOKENS"
