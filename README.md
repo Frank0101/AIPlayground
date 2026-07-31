@@ -40,6 +40,10 @@ when the script exits.
   one. Reports a pass rate and standard deviation instead of a single
   PASS/FAIL, since non-zero temperature makes any single run unreliable as
   a score.
+- **06 - Guardrail**: a keyword-based input filter. If a prompt contains a
+  blocked word, it returns a fixed refusal without ever calling the model;
+  otherwise the model runs as normal. Runs two example prompts to show both
+  branches.
 
 ## Glossary
 
@@ -92,6 +96,18 @@ when the script exits.
   benchmark suites. It wraps EleutherAI's `lm-eval` harness, which isn't
   installed here yet (not in `requirements.txt`) since experiment 04 uses a
   custom eval instead.
+
+### Safety & guardrails
+
+- **Guardrail**: a check applied _before_ (or instead of) generation — e.g.
+  refusing a prompt that contains a blocked word — rather than grading
+  output _after_ generation like an eval does.
+- **Constrained decoding**: restricting what a model is allowed to generate
+  token by token during generation itself (e.g. forcing valid JSON, or one
+  of a fixed set of choices) — unlike a guardrail, which only inspects the
+  prompt beforehand, or an eval, which only inspects the output afterward.
+  `mlx_lm.generate` has no built-in support for this; it would need an
+  extra library hooked into the model's logits (e.g. `outlines`).
 
 ### Tooling
 
