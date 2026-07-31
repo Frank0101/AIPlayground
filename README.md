@@ -18,7 +18,11 @@ when the script exits.
 
 - **01 - Run a local model**: downloads Meta's Llama 3.2 3B Instruct (4-bit,
   mlx-community build), sends it a single prompt via `mlx_lm.generate`, and
-  prints the response.
+  prints the response. Uses the default sampling temperature (0.0, greedy),
+  so the response is identical on every run.
+- **02 - Sampling temperature**: same model and prompt as experiment 01, but
+  with `--temp 0.7` instead of the default 0.0, so the response can differ
+  between runs.
 
 ## Glossary
 
@@ -29,6 +33,10 @@ when the script exits.
   (e.g. 4-bit) to shrink size and memory use, at a small cost to quality.
 - **Token**: a small unit of text, often a word or part of a word; the unit
   a language model reads and generates one at a time.
+- **Sampling temperature**: controls how a model picks its next token. At
+  0.0 ("greedy") it always picks the single most likely token, giving
+  identical output for the same prompt every time. Higher values sample
+  probabilistically among likely tokens, giving more varied output.
 - **Inference**: using a trained model to generate output, as opposed
   to training it.
 - **Parameters**: the numerical values learned during training that
