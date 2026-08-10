@@ -10,13 +10,9 @@ fine-tuning language models locally, primarily using
    dependencies.
 2. Run an experiment, e.g. `./experiments/01-run-local-model.sh`.
 
-Each experiment is a script under `experiments/`, numbered in the order they
-were built. All of them source `experiments/lib.sh`, which holds what's
-common to every experiment (repo-root cd, cache setup/cleanup, the
-`mlx_lm.generate` call, case-insensitive matching) so each script only
-contains what's actually unique about it. Downloaded models are cached
-per-experiment under `.hf-cache/` and removed automatically when the script
-exits.
+Each experiment is a self-contained script under `experiments/`. Downloaded
+models are cached per-experiment under `.hf-cache/` and removed automatically
+when the script exits.
 
 ## Experiments
 
@@ -48,12 +44,6 @@ exits.
   blocked word, it returns a fixed refusal without ever calling the model;
   otherwise the model runs as normal. Runs two example prompts to show both
   branches.
-- **07 - LLM judge**: generates one answer locally as usual, then asks
-  Claude (via `claude -p`, non-interactive) to judge whether it's correct
-  in plain language, instead of matching keywords. The only experiment
-  here that isn't fully local — judging is a real call to Anthropic's API
-  and consumes Claude usage, even though it's invoked through a CLI
-  installed on this machine.
 
 ## Glossary
 
@@ -106,11 +96,6 @@ exits.
   benchmark suites. It wraps EleutherAI's `lm-eval` harness, which isn't
   installed here yet (not in `requirements.txt`) since experiment 04 uses a
   custom eval instead.
-- **LLM-as-judge**: grading a model's answer by asking a (usually more
-  capable) model whether it's correct, in plain language, instead of
-  matching keywords. More flexible — it can recognise a correct answer
-  phrased unexpectedly — but less reproducible and, if the judge is a
-  hosted model, not free or local.
 
 ### Safety & guardrails
 

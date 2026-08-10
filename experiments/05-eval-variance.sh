@@ -1,5 +1,7 @@
 #!/bin/bash
-source "$(dirname "$0")/lib.sh"
+set -e
+
+cd "$(dirname "$0")/.."
 
 # Experiment 5: how a non-zero temperature affects eval reliability.
 #
@@ -19,7 +21,8 @@ source "$(dirname "$0")/lib.sh"
 # answers (e.g. the common "sky is blue because it reflects the ocean"
 # myth) rather than only checking for a correct one.
 
-playground::init "05"
+VENV=".venv"
+CACHE=".hf-cache/experiment-05"
 
 MODEL="mlx-community/Llama-3.2-3B-Instruct-4bit"
 
@@ -35,6 +38,19 @@ MAX_TOKENS=100
 TEMP=0.7
 PASSES=5
 
+cleanup() {
+	echo
+	echo "==> Removing downloaded model and experiment cache..."
+	rm -rf "$CACHE"
+}
+trap cleanup EXIT
+
+if [[ ! -x "$VENV/bin/mlx_lm.generate" ]]; then
+	echo "Error: the project environment is not ready." >&2
+	echo "Run ./setup.sh first." >&2
+	exit 1
+fi
+
 echo "==> Running eval"
 echo "Model: $MODEL"
 echo "Hugging Face cache: $(pwd)/$CACHE"
@@ -45,20 +61,32 @@ echo "Forbidden keywords: ${FORBIDDEN_KEYWORDS[*]}"
 echo
 
 PASS_COUNT=0
+OFFLINE=0
 
 for SEED in $(seq 0 $((PASSES - 1))); do
-	RESPONSE=$(playground::generate_quiet "$MODEL" "$PROMPT" "$MAX_TOKENS" "$TEMP" "$SEED")
+	RESPONSE=$(HF_HOME="$CACHE" HF_HUB_OFFLINE="$OFFLINE" "$VENV/bin/mlx_lm.generate" \
+		--model "$MODEL" \
+		--prompt "$PROMPT" \
+		--max-tokens "$MAX_TOKENS" \
+		--temp "$TEMP" \
+		--seed "$SEED" \
+		--verbose False)
+	OFFLINE=1
+
+	# Case-insensitive substring check, done with tr rather than bash's
+	# ${VAR,,} since macOS ships bash 3.2, which doesn't support it.
+	RESPONSE_LOWER=$(printf '%s' "$RESPONSE" | tr '[:upper:]' '[:lower:]')
 
 	REASON=""
 	for KEYWORD in "${REQUIRED_KEYWORDS[@]}"; do
-		if ! playground::contains "$RESPONSE" "$KEYWORD"; then
+		if [[ "$RESPONSE_LOWER" != *"$KEYWORD"* ]]; then
 			REASON="missing required \"$KEYWORD\""
 			break
 		fi
 	done
 	if [[ -z "$REASON" ]]; then
 		for KEYWORD in "${FORBIDDEN_KEYWORDS[@]}"; do
-			if playground::contains "$RESPONSE" "$KEYWORD"; then
+			if [[ "$RESPONSE_LOWER" == *"$KEYWORD"* ]]; then
 				REASON="contains forbidden \"$KEYWORD\""
 				break
 			fi

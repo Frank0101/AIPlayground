@@ -1,5 +1,7 @@
 #!/bin/bash
-source "$(dirname "$0")/lib.sh"
+set -e
+
+cd "$(dirname "$0")/.."
 
 # Experiment 3: a back-and-forth conversation, unlike experiments 1 and 2
 # where a single prompt gets a single reply.
@@ -17,12 +19,26 @@ source "$(dirname "$0")/lib.sh"
 # handles proper role-based multi-turn history for you out of the box —
 # try `mlx_lm.chat --model <model>` to compare.
 
-playground::init "03"
+VENV=".venv"
+CACHE=".hf-cache/experiment-03"
 
 MODEL="mlx-community/Llama-3.2-3B-Instruct-4bit"
 
 MAX_TOKENS=300
 TEMP=0.7
+
+cleanup() {
+	echo
+	echo "==> Removing downloaded model and experiment cache..."
+	rm -rf "$CACHE"
+}
+trap cleanup EXIT
+
+if [[ ! -x "$VENV/bin/mlx_lm.generate" ]]; then
+	echo "Error: the project environment is not ready." >&2
+	echo "Run ./setup.sh first." >&2
+	exit 1
+fi
 
 echo "==> Starting chat"
 echo "Model: $MODEL"
@@ -31,13 +47,23 @@ echo "Type 'exit' or 'quit' to end the conversation."
 echo
 
 HISTORY=""
+OFFLINE=0
 
 while read -r -p "You: " INPUT; do
 	[[ -z "$INPUT" || "$INPUT" == "exit" || "$INPUT" == "quit" ]] && break
 
 	HISTORY+="User: $INPUT"$'\n'"Assistant:"
 
-	RESPONSE=$(playground::generate_quiet "$MODEL" "$HISTORY" "$MAX_TOKENS" "$TEMP")
+	RESPONSE=$(HF_HOME="$CACHE" HF_HUB_OFFLINE="$OFFLINE" "$VENV/bin/mlx_lm.generate" \
+		--model "$MODEL" \
+		--prompt "$HISTORY" \
+		--max-tokens "$MAX_TOKENS" \
+		--temp "$TEMP" \
+		--verbose False)
+
+	# After the first turn the model is cached, so later turns skip the
+	# Hub's file-list/etag check and load straight from $CACHE.
+	OFFLINE=1
 
 	echo "Assistant:$RESPONSE"
 	echo
