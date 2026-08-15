@@ -20,9 +20,10 @@ Every experiment shares a common shape and a small library,
 `experiments/lib.sh`: sourcing it gives each script a colored
 title/subtitle helper, an environment-readiness check, per-experiment
 cache setup with automatic cleanup on exit, a consistent way to print its
-configuration, and a case-insensitive substring check used by several of
-the evals. Look at any two experiments side by side (e.g.
-`05-basic-eval.sh` and `06-eval-variance.sh`) to see the pattern.
+configuration, and a case-insensitive substring check used across several
+experiments (evals and otherwise). Look at any two experiments side by
+side (e.g. `05-basic-eval.sh` and `06-eval-variance.sh`) to see the
+pattern.
 
 ## Experiments
 

@@ -115,11 +115,18 @@ Points that are easy to get wrong:
 - **`HF_HOME="$CACHE" cmd ...` stays a single-command env prefix**, never
   `export HF_HOME=...`. The prefix form scopes the variable to that one
   call; `export` would leak it to the rest of the script.
-- **Multi-call loops** (eval-style experiments that call `mlx_lm.generate`
-  once per case) toggle `HF_HUB_OFFLINE`: start with `OFFLINE=0`, add
+- **Multi-call loops** (any experiment that calls `mlx_lm.generate` once
+  per case — evals, but also e.g. a guardrail demo looping over several
+  test prompts) toggle `HF_HUB_OFFLINE`: start with `OFFLINE=0`, add
   `HF_HUB_OFFLINE="$OFFLINE"` to the env prefix, and set `OFFLINE=1` right
   after the first call — later calls skip the Hub's file-list/etag check
   since the model is already cached locally.
+- **Case-insensitive substring checks go through
+  `utils::contains_ci "$haystack" "$needle"`**, not a manual
+  lowercase-then-compare at the call site. It centralizes the `tr`-not-
+  `${VAR,,}` workaround (still needed for macOS's bash 3.2) so that
+  comment and logic don't need repeating in every experiment that grades
+  by substring/keyword match.
 - **A trailing "==> Score: ..." style summary line is just another
   `utils::title` call**, not a raw `echo`. When the summary needs
   computation bash can't do natively (floating-point math via `awk`,
@@ -174,9 +181,9 @@ Points that are easy to get wrong:
 
 - Functions are ordered top-to-bottom by first-use order in a typical
   experiment (`title` → `check_requirements` → `init_cache_cleanup` →
-  `print_config`), not alphabetically or by creation order. When adding a
-  function, slot it in where it's first called from an experiment script,
-  and re-check the order still makes sense.
+  `print_config` → `contains_ci`), not alphabetically or by creation
+  order. When adding a function, slot it in where it's first called from
+  an experiment script, and re-check the order still makes sense.
 - Any global variable the library needs internally (state that must
   survive past a function returning — e.g. a value an `EXIT` trap reads
   later) is prefixed `UTILS_` to signal it's library-owned, not something
