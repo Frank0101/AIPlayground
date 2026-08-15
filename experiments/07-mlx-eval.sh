@@ -3,18 +3,18 @@ set -e
 source "$(dirname "$0")/lib.sh"
 cd "$(dirname "$0")/.."
 
-# Experiment 6: the same eval as experiment 5, but scored by mlx_lm.evaluate
+# Experiment 7: the same eval as experiment 5, but scored by mlx_lm.evaluate
 # — MLX-LM's wrapper around lm-evaluation-harness — to compare the two.
 #
 # Where experiment 5's cases are defined by hand, here we run a
 # pre-built benchmark bundled inside lm_eval, so the eval content itself
 # is out of our control — standardized and comparable, but opaque.
-utils::title "#6: Eval (mlx_lm.evaluate)"
+utils::title "#7: Eval (mlx_lm.evaluate)"
 
 VENV=".venv"
 utils::check_requirements "$VENV"
 
-CACHE=".hf-cache/experiment-06"
+CACHE=".hf-cache/experiment-07"
 utils::init_cache_cleanup "$CACHE"
 
 MODEL="mlx-community/Llama-3.2-3B-Instruct-4bit"

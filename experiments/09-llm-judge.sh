@@ -3,7 +3,7 @@ source "$(dirname "$0")/lib.sh"
 
 # Experiment 9: LLM-as-judge grading, using the Claude Code CLI as the judge.
 #
-# Experiments 05 and 07 grade with substring/keyword matching — cheap and
+# Experiments 05 and 06 grade with substring/keyword matching — cheap and
 # deterministic, but blind to meaning: a correct answer phrased differently
 # than expected fails, and a wrong answer that happens to contain the right
 # words passes. Here we generate one answer locally as usual, then ask

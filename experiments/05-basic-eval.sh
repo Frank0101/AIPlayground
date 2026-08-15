@@ -6,7 +6,7 @@ cd "$(dirname "$0")/.."
 # Experiment 5: a minimal custom eval — a handful of prompts with known-good
 # answers, scored by checking whether the expected text shows up in the
 # model's response. mlx_lm.evaluate wraps a standard benchmark harness
-# instead (see experiment 6) — this hand-rolls it to see how it works.
+# instead (see experiment 7) — this hand-rolls it to see how it works.
 #
 # Grading is case-insensitive substring matching, so prompts are phrased
 # for a short, unambiguous answer. Temp 0 (greedy) keeps scores
