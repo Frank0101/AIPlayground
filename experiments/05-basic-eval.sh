@@ -5,13 +5,13 @@ cd "$(dirname "$0")/.."
 
 # Experiment 5: a minimal custom eval — a handful of prompts with known-good
 # answers, scored by checking whether the expected text shows up in the
-# model's response. Simpler than mlx_lm.evaluate's lm-eval suites
-# (MMLU/GSM8K), but measures exactly what these cases ask.
+# model's response. mlx_lm.evaluate wraps a standard benchmark harness
+# instead (see experiment 6) — this hand-rolls it to see how it works.
 #
 # Grading is case-insensitive substring matching, so prompts are phrased
 # for a short, unambiguous answer. Temp 0 (greedy) keeps scores
 # reproducible between runs.
-utils::title "#5: Eval"
+utils::title "#5: Basic Eval"
 
 VENV=".venv"
 utils::check_requirements "$VENV"

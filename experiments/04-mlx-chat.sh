@@ -32,6 +32,7 @@ utils::print_config \
 
 utils::title "Begin experiment" \
 	"Downloading model and starting chat session, please wait.."
+
 # HF Hub progress bars are disabled here because the download happens
 # synchronously right before mlx_lm.chat prints its own '>>' prompt, and the
 # two can visually collide on a real terminal.

@@ -92,6 +92,10 @@ Points that are easy to get wrong:
   since the model is already cached locally.
 - **A trailing "==> Score: ..." style summary line is just another
   `utils::title` call**, not a raw `echo`.
+- **A comment explaining a specific command gets a blank line above it**,
+  separating it from whatever precedes it (a `utils::title` call, another
+  statement), so it reads as attached to the command it explains below,
+  not to the line above.
 - **Capturing a generate call into a variable** (`RESPONSE=$(...)`) puts the
   opening `$(` alone on the `VAR=$(` line, the command and its flags
   indented one level further on their own lines, and the closing `)` alone
@@ -112,6 +116,12 @@ Points that are easy to get wrong:
   `CASES` array) stays inline in the script. Only pull something into
   `lib.sh` once it's genuinely shared — actually duplicated across two or
   more experiments, not merely "might be reused later."
+- **"Basic" / built-in pairs** (e.g. experiment 3 hand-rolling chat vs.
+  experiment 4 using `mlx_lm.chat`; experiment 5 hand-rolling eval vs.
+  experiment 6 using `mlx_lm.evaluate`) cross-reference each other by
+  number in their comments — "see experiment N" — rather than a generic
+  pointer like "try `mlx_lm.chat --model <model>`". Keep both directions in
+  sync when either one's number changes.
 
 ## lib.sh conventions
 

@@ -3,7 +3,7 @@ set -e
 
 cd "$(dirname "$0")/.."
 
-# Experiment 6: how a non-zero temperature affects eval reliability.
+# Experiment 7: how a non-zero temperature affects eval reliability.
 #
 # Experiment 5 grades a single greedy (temp 0) run per case, which is
 # reproducible but doesn't reflect how the model behaves with realistic
@@ -22,7 +22,7 @@ cd "$(dirname "$0")/.."
 # myth) rather than only checking for a correct one.
 
 VENV=".venv"
-CACHE=".hf-cache/experiment-06"
+CACHE=".hf-cache/experiment-07"
 
 MODEL="mlx-community/Llama-3.2-3B-Instruct-4bit"
 
