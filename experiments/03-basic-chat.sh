@@ -52,7 +52,7 @@ while read -r -p "You: " INPUT; do
 	# Hub's file-list/etag check and load straight from $CACHE.
 	OFFLINE=1
 
-	echo "Assistant:$RESPONSE"
+	echo "Assistant: $RESPONSE"
 	echo
 
 	HISTORY+=" $RESPONSE"$'\n'
