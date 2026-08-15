@@ -57,24 +57,20 @@ for SEED in $(seq 0 $((PASSES - 1))); do
 	)
 	OFFLINE=1
 
-	# Case-insensitive substring check, done with tr rather than bash's
-	# ${VAR,,} since macOS ships bash 3.2, which doesn't support it.
-	RESPONSE_LOWER=$(printf '%s' "$RESPONSE" | tr '[:upper:]' '[:lower:]')
-
 	# REASON accumulates why this pass failed, if it did; empty means it
 	# passed so far. Checked in two stages: first that every required
 	# keyword showed up, then — only if that stage passed — that no
 	# forbidden keyword did either.
 	REASON=""
 	for KEYWORD in "${REQUIRED_KEYWORDS[@]}"; do
-		if [[ "$RESPONSE_LOWER" != *"$KEYWORD"* ]]; then
+		if ! utils::contains_ci "$RESPONSE" "$KEYWORD"; then
 			REASON="missing required \"$KEYWORD\""
 			break
 		fi
 	done
 	if [[ -z "$REASON" ]]; then
 		for KEYWORD in "${FORBIDDEN_KEYWORDS[@]}"; do
-			if [[ "$RESPONSE_LOWER" == *"$KEYWORD"* ]]; then
+			if utils::contains_ci "$RESPONSE" "$KEYWORD"; then
 				REASON="contains forbidden \"$KEYWORD\""
 				break
 			fi

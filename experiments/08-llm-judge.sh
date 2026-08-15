@@ -71,14 +71,10 @@ for SEED in $(seq 0 $((PASSES - 1))); do
 	# hitting a permission prompt that would stall a non-interactive script.
 	VERDICT=$(claude -p "$JUDGE_PROMPT" --allowedTools "")
 
-	# Case-insensitive substring check, done with tr rather than bash's
-	# ${VAR,,} since macOS ships bash 3.2, which doesn't support it.
-	VERDICT_LOWER=$(printf '%s' "$VERDICT" | tr '[:upper:]' '[:lower:]')
-
-	if [[ "$VERDICT_LOWER" == *pass* ]]; then
+	if utils::contains_ci "$VERDICT" "pass"; then
 		echo "PASS  (seed $SEED): $RESPONSE"
 		PASS_COUNT=$((PASS_COUNT + 1))
-	elif [[ "$VERDICT_LOWER" == *fail* ]]; then
+	elif utils::contains_ci "$VERDICT" "fail"; then
 		echo "FAIL  (seed $SEED, judge said \"$VERDICT\"): $RESPONSE"
 	else
 		echo "UNKNOWN  (seed $SEED, judge said \"$VERDICT\"): $RESPONSE"

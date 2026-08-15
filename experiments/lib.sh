@@ -43,3 +43,15 @@ utils::print_config() {
 		echo "$line"
 	done
 }
+
+utils::contains_ci() {
+	local haystack="$1"
+	local needle="$2"
+
+	# Done with tr rather than bash's ${VAR,,} since macOS ships bash 3.2,
+	# which doesn't support it.
+	haystack=$(printf '%s' "$haystack" | tr '[:upper:]' '[:lower:]')
+	needle=$(printf '%s' "$needle" | tr '[:upper:]' '[:lower:]')
+
+	[[ "$haystack" == *"$needle"* ]]
+}

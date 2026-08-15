@@ -54,12 +54,7 @@ for CASE in "${CASES[@]}"; do
 	)
 	OFFLINE=1
 
-	# Case-insensitive substring check, done with tr rather than bash's
-	# ${VAR,,} since macOS ships bash 3.2, which doesn't support it.
-	RESPONSE_LOWER=$(printf '%s' "$RESPONSE" | tr '[:upper:]' '[:lower:]')
-	EXPECTED_LOWER=$(printf '%s' "$EXPECTED" | tr '[:upper:]' '[:lower:]')
-
-	if [[ "$RESPONSE_LOWER" == *"$EXPECTED_LOWER"* ]]; then
+	if utils::contains_ci "$RESPONSE" "$EXPECTED"; then
 		echo "PASS  (\"$PROMPT\" -> expected \"$EXPECTED\"): $RESPONSE"
 		PASS_COUNT=$((PASS_COUNT + 1))
 	else
