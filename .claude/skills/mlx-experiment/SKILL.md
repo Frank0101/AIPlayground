@@ -70,13 +70,16 @@ Points that are easy to get wrong:
   that pattern shows up in the numbered sequence. Once it's been
   introduced once, later experiments reusing the same line can assume the
   reader already has that context and omit the repeat.
-- **Bullet the comment, not the prose, when explaining several distinct
-  enumerable things** — e.g. the individual fields in a command's output,
-  or a list of related concerns — using `# - item` with continuation
+- **Bullet only the individual properties of one thing** — e.g. each
+  field in a command's JSON output — using `# - item` with continuation
   lines indented `#   `. Keep any surrounding context (what the thing is,
   why it needs explaining) in normal flowing prose; reserve the bullets
   for the actual enumerable items themselves, not the introduction to
-  them.
+  them. This does **not** extend to comments that compare or contrast
+  several different approaches/concepts (e.g. "evals grade after
+  generation; constrained decoding restricts during generation; this is
+  neither") — that's narrative, not a property list, and stays prose even
+  though it technically names several things.
 - **Declare-then-immediately-act pairing.** Any variable that a lib
   function validates or registers (`VENV`, `CACHE`) is declared right above
   that call, separated by a blank line from the next pair. Variables that

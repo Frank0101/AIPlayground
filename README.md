@@ -16,14 +16,13 @@ when the script exits.
 
 ### Format
 
-Experiments 01-08 share a common shape and a small library,
-`experiments/lib.sh` (09 hasn't been migrated to it yet): sourcing it gives
-each script a colored title/subtitle helper, an environment-readiness
-check, per-experiment cache setup with automatic cleanup on exit, a
-consistent way to print its configuration, and a case-insensitive substring
-check used by several of the evals. Look at any two experiments side by
-side (e.g. `05-basic-eval.sh` and `06-eval-variance.sh`) to see the
-pattern.
+Every experiment shares a common shape and a small library,
+`experiments/lib.sh`: sourcing it gives each script a colored
+title/subtitle helper, an environment-readiness check, per-experiment
+cache setup with automatic cleanup on exit, a consistent way to print its
+configuration, and a case-insensitive substring check used by several of
+the evals. Look at any two experiments side by side (e.g.
+`05-basic-eval.sh` and `06-eval-variance.sh`) to see the pattern.
 
 ## Experiments
 
