@@ -1,9 +1,9 @@
 #!/bin/bash
 source "$(dirname "$0")/lib.sh"
 
-# Experiment 7: LLM-as-judge grading, using the Claude Code CLI as the judge.
+# Experiment 8: LLM-as-judge grading, using the Claude Code CLI as the judge.
 #
-# Experiments 04 and 05 grade with substring/keyword matching — cheap and
+# Experiments 05 and 06 grade with substring/keyword matching — cheap and
 # deterministic, but blind to meaning: a correct answer phrased differently
 # than expected fails, and a wrong answer that happens to contain the right
 # words passes. Here we generate one answer locally as usual, then ask
@@ -20,7 +20,7 @@ source "$(dirname "$0")/lib.sh"
 # to read text and reply with a verdict), which also avoids it hitting a
 # permission prompt that would stall a non-interactive script.
 
-playground::init "07"
+playground::init "08"
 playground::require_command claude "the 'claude' CLI is not installed or not in PATH."
 
 MODEL="mlx-community/Llama-3.2-3B-Instruct-4bit"

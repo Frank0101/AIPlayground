@@ -3,7 +3,7 @@ set -e
 
 cd "$(dirname "$0")/.."
 
-# Experiment 4: a minimal custom eval — a handful of prompts with known-good
+# Experiment 5: a minimal custom eval — a handful of prompts with known-good
 # answers, scored automatically by checking whether the expected text shows
 # up in the model's response.
 #
@@ -16,7 +16,7 @@ cd "$(dirname "$0")/.."
 # scores are reproducible between runs.
 
 VENV=".venv"
-CACHE=".hf-cache/experiment-04"
+CACHE=".hf-cache/experiment-05"
 
 MODEL="mlx-community/Llama-3.2-3B-Instruct-4bit"
 

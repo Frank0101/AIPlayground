@@ -3,9 +3,9 @@ set -e
 
 cd "$(dirname "$0")/.."
 
-# Experiment 6: a keyword-based guardrail, distinct from both prior ideas.
+# Experiment 7: a keyword-based guardrail, distinct from both prior ideas.
 #
-# - Evals (04, 05) grade the model's own output after generation.
+# - Evals (05, 06) grade the model's own output after generation.
 # - Constrained decoding (discussed but not built here) restricts what the
 #   model can generate, token by token, during generation.
 # - This is neither: it inspects the prompt BEFORE generation, and if it
@@ -14,7 +14,7 @@ cd "$(dirname "$0")/.."
 #   so it blocks any prompt containing the word regardless of context.
 
 VENV=".venv"
-CACHE=".hf-cache/experiment-06"
+CACHE=".hf-cache/experiment-07"
 
 MODEL="mlx-community/Llama-3.2-3B-Instruct-4bit"
 

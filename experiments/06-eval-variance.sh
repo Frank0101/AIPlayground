@@ -3,9 +3,9 @@ set -e
 
 cd "$(dirname "$0")/.."
 
-# Experiment 5: how a non-zero temperature affects eval reliability.
+# Experiment 6: how a non-zero temperature affects eval reliability.
 #
-# Experiment 4 grades a single greedy (temp 0) run per case, which is
+# Experiment 5 grades a single greedy (temp 0) run per case, which is
 # reproducible but doesn't reflect how the model behaves with realistic
 # sampling. Here we run one open-ended question PASSES times at temp > 0,
 # using a different --seed each pass (0, 1, 2, ...) so the whole experiment
@@ -22,7 +22,7 @@ cd "$(dirname "$0")/.."
 # myth) rather than only checking for a correct one.
 
 VENV=".venv"
-CACHE=".hf-cache/experiment-05"
+CACHE=".hf-cache/experiment-06"
 
 MODEL="mlx-community/Llama-3.2-3B-Instruct-4bit"
 

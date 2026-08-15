@@ -11,7 +11,7 @@ cd "$(dirname "$0")/.."
 # Each turn appends to a growing HISTORY string re-sent as the whole prompt
 # (sent as one plain-text block, not distinct role-tagged turns), so replies
 # get slower as the conversation grows and more text must be re-processed.
-utils::title "#3: Chat"
+utils::title "#3: Basic Chat"
 
 VENV=".venv"
 utils::check_requirements "$VENV"
