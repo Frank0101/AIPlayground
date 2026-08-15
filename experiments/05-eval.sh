@@ -1,39 +1,26 @@
 #!/bin/bash
 set -e
-
+source "$(dirname "$0")/lib.sh"
 cd "$(dirname "$0")/.."
 
 # Experiment 5: a minimal custom eval — a handful of prompts with known-good
-# answers, scored automatically by checking whether the expected text shows
-# up in the model's response.
+# answers, scored by checking whether the expected text shows up in the
+# model's response. Simpler than mlx_lm.evaluate's lm-eval suites
+# (MMLU/GSM8K), but measures exactly what these cases ask.
 #
-# This is simpler than a standard benchmark suite (see mlx_lm.evaluate,
-# which wraps the lm-eval harness for suites like MMLU or GSM8K), but it
-# measures exactly what these cases ask, with no extra dependencies.
-#
-# Grading is a case-insensitive substring match, so every prompt is phrased
-# for a short, unambiguous expected answer. Temperature is 0 (greedy) so
-# scores are reproducible between runs.
+# Grading is case-insensitive substring matching, so prompts are phrased
+# for a short, unambiguous answer. Temp 0 (greedy) keeps scores
+# reproducible between runs.
+utils::title "#5: Eval"
 
 VENV=".venv"
+utils::check_requirements "$VENV"
+
 CACHE=".hf-cache/experiment-05"
+utils::init_cache_cleanup "$CACHE"
 
 MODEL="mlx-community/Llama-3.2-3B-Instruct-4bit"
-
 MAX_TOKENS=50
-
-cleanup() {
-	echo
-	echo "==> Removing downloaded model and experiment cache..."
-	rm -rf "$CACHE"
-}
-trap cleanup EXIT
-
-if [[ ! -x "$VENV/bin/mlx_lm.generate" ]]; then
-	echo "Error: the project environment is not ready." >&2
-	echo "Run ./setup.sh first." >&2
-	exit 1
-fi
 
 # Each case is "prompt|||expected substring".
 CASES=(
@@ -43,11 +30,12 @@ CASES=(
 	"What is the chemical symbol for gold? Answer with just the symbol.|||Au"
 )
 
-echo "==> Running eval"
-echo "Model: $MODEL"
-echo "Hugging Face cache: $(pwd)/$CACHE"
-echo "Cases: ${#CASES[@]}"
-echo
+utils::print_config \
+	"Model: $MODEL" \
+	"Maximum output tokens: $MAX_TOKENS" \
+	"Cases: ${#CASES[@]}"
+
+utils::title "Begin experiment"
 
 PASS=0
 OFFLINE=0
@@ -56,12 +44,14 @@ for CASE in "${CASES[@]}"; do
 	PROMPT="${CASE%%|||*}"
 	EXPECTED="${CASE##*|||}"
 
-	RESPONSE=$(HF_HOME="$CACHE" HF_HUB_OFFLINE="$OFFLINE" "$VENV/bin/mlx_lm.generate" \
-		--model "$MODEL" \
-		--prompt "$PROMPT" \
-		--max-tokens "$MAX_TOKENS" \
-		--temp 0 \
-		--verbose False)
+	RESPONSE=$(
+		HF_HOME="$CACHE" HF_HUB_OFFLINE="$OFFLINE" "$VENV/bin/mlx_lm.generate" \
+			--model "$MODEL" \
+			--prompt "$PROMPT" \
+			--max-tokens "$MAX_TOKENS" \
+			--temp 0 \
+			--verbose False
+	)
 	OFFLINE=1
 
 	# Case-insensitive substring check, done with tr rather than bash's
@@ -77,5 +67,4 @@ for CASE in "${CASES[@]}"; do
 	fi
 done
 
-echo
-echo "==> Score: $PASS/${#CASES[@]}"
+utils::title "Score: $PASS/${#CASES[@]}"
