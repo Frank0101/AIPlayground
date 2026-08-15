@@ -8,11 +8,9 @@ cd "$(dirname "$0")/.."
 # hand-rolled HISTORY loop, to compare the two.
 #
 # Unlike experiment 3's growing plain-text block, mlx_lm.chat sends each
-# turn through the model's real chat template (distinct role-tagged
-# messages) and reuses a cached KV state across turns instead of
-# re-processing everything on every reply. It also runs its own REPL, with
-# 'q' to exit, so there's nothing left for this script to manage once it
-# starts.
+# turn through the model's real chat template and reuses a cached KV state
+# across turns. It also runs its own REPL, with 'q' to exit, so there's
+# nothing left for this script to manage once it starts.
 utils::title "#4: Chat (mlx_lm.chat)"
 
 VENV=".venv"
