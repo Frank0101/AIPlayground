@@ -62,9 +62,14 @@ Points that are easy to get wrong:
   comment explains the experiment as a whole; the title announces it. They
   describe the same thing, so they stay adjacent.
 - **Comment length**: no longer than 8 lines total (including the blank
-  line between paragraphs). Two short paragraphs, roughly what experiment 1
-  has. Don't let it sprawl; trim to the essential mechanism/caveat rather
-  than explaining everything adjacent to the topic.
+  line between paragraphs). Two short paragraphs. Don't let it sprawl; trim
+  to the essential mechanism/caveat rather than explaining everything
+  adjacent to the topic.
+- **A comment that only explains what a line of code does** (not a
+  caveat, not a non-obvious "why") only needs to appear the first time
+  that pattern shows up in the numbered sequence. Once it's been
+  introduced once, later experiments reusing the same line can assume the
+  reader already has that context and omit the repeat.
 - **Declare-then-immediately-act pairing.** Any variable that a lib
   function validates or registers (`VENV`, `CACHE`) is declared right above
   that call, separated by a blank line from the next pair. Variables that
@@ -116,20 +121,33 @@ Points that are easy to get wrong:
   `CASES` array) stays inline in the script. Only pull something into
   `lib.sh` once it's genuinely shared — actually duplicated across two or
   more experiments, not merely "might be reused later."
-- **"Basic" / built-in pairs** (e.g. experiment 3 hand-rolling chat vs.
-  experiment 4 using `mlx_lm.chat`; experiment 5 hand-rolling eval vs.
-  experiment 6 using `mlx_lm.evaluate`) cross-reference each other by
-  number in their comments — "see experiment N" — rather than a generic
-  pointer like "try `mlx_lm.chat --model <model>`". Keep both directions in
-  sync when either one's number changes.
+- **"Basic" / built-in pairs** — a hand-rolled experiment paired with a
+  later one doing the same thing via the actual MLX-LM built-in tool for it
+  — cross-reference each other by number in their comments ("see
+  experiment N") rather than a generic pointer like "try
+  `mlx_lm.chat --model <model>`". Keep both directions in sync when either
+  one's number changes.
+- **A new Python dependency belongs in `requirements.txt`, not a per-script
+  runtime check.** If an experiment needs something beyond the base
+  `mlx-lm` install (e.g. `mlx_lm.evaluate` needing the `lm_eval` package),
+  add the matching pip extra to the `mlx-lm[...]==VERSION` line — check
+  what extras the installed version actually provides with
+  `pip show mlx-lm` / its `METADATA`'s `Provides-Extra` entries rather than
+  guessing a package name — and update that file's explanatory comment.
+  `utils::check_requirements` deliberately stays minimal (only checks that
+  `mlx_lm.generate` exists, as a proxy for "`./setup.sh` has been run at
+  all") and is **not** meant to grow into a full per-extra dependency
+  audit — that tradeoff (simplicity/speed vs. catching a stale venv after
+  `requirements.txt` changes) was discussed explicitly and simplicity won.
+  Don't re-add a `python -c "import ..."` check inside a script for this.
 
 ## lib.sh conventions
 
 - Functions are ordered top-to-bottom by first-use order in a typical
   experiment (`title` → `check_requirements` → `init_cache_cleanup` →
   `print_config`), not alphabetically or by creation order. When adding a
-  function, slot it in where it's first called from from an experiment
-  script, and re-check the order still makes sense.
+  function, slot it in where it's first called from an experiment script,
+  and re-check the order still makes sense.
 - Any global variable the library needs internally (state that must
   survive past a function returning — e.g. a value an `EXIT` trap reads
   later) is prefixed `UTILS_` to signal it's library-owned, not something
@@ -164,12 +182,23 @@ update, for every affected file:
 2. The `# Experiment N: ...` header line.
 3. The `CACHE=".hf-cache/experiment-NN"` value.
 4. Any cross-references to other experiment numbers in comments, in _any_
-   file in `experiments/` — not just the ones being renumbered (e.g. "see
-   experiment 4" elsewhere needs to become "experiment 5").
+   file in `experiments/` — not just the ones being renumbered (e.g. a
+   "see experiment N" pointer elsewhere needs to shift too).
 
 Grep for `xperiment [0-9]` and `hf-cache/experiment-0` across
 `experiments/*.sh` to find every reference before declaring it done, then
 `bash -n` every touched file as a final sanity check.
+
+**When the shift is caused by inserting a new experiment (not just moving
+existing ones down), re-read what each cross-reference actually claims —
+don't just substitute numbers.** A comment listing "experiments X and Y
+do Z" may need a number added rather than swapped, if the newly-inserted
+experiment also does Z. Conversely, if the newly-inserted experiment
+doesn't fit the claim being made (a different grading mechanism, a
+different approach entirely), the reference should skip over it and point
+only at the experiments the claim genuinely still describes. A mechanical
+find-and-replace on numbers can silently produce a false claim in either
+direction.
 
 ## Workflow expectations
 

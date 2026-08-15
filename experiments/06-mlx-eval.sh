@@ -9,17 +9,10 @@ cd "$(dirname "$0")/.."
 #
 # Multiple-choice tasks like arc_easy score by which answer the model
 # assigns the highest probability to, not by generating and checking text.
-# Requires the optional lm_eval package on top of the base setup.
 utils::title "#6: Eval (mlx_lm.evaluate)"
 
 VENV=".venv"
 utils::check_requirements "$VENV"
-
-if ! "$VENV/bin/python" -c "import lm_eval" 2>/dev/null; then
-	echo "Error: the 'lm_eval' package is not installed." >&2
-	echo "Run '$VENV/bin/pip install lm-eval' first." >&2
-	exit 1
-fi
 
 CACHE=".hf-cache/experiment-06"
 utils::init_cache_cleanup "$CACHE"
