@@ -30,8 +30,12 @@ utils::print_config \
 	"Maximum output tokens: $MAX_TOKENS" \
 	"Sampling temperature: $TEMP"
 
-utils::title "Begin experiment"
-HF_HOME="$CACHE" \
+utils::title "Begin experiment" \
+	"Downloading model and starting chat session, please wait.."
+# HF Hub progress bars are disabled here because the download happens
+# synchronously right before mlx_lm.chat prints its own '>>' prompt, and the
+# two can visually collide on a real terminal.
+HF_HOME="$CACHE" HF_HUB_DISABLE_PROGRESS_BARS=1 \
 	"$VENV/bin/mlx_lm.chat" \
 	--model "$MODEL" \
 	--max-tokens "$MAX_TOKENS" \
