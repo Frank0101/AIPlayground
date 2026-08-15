@@ -4,11 +4,13 @@ source "$(dirname "$0")/lib.sh"
 cd "$(dirname "$0")/.."
 
 # Experiment 6: the same eval as experiment 5, but scored by mlx_lm.evaluate
-# — MLX-LM's wrapper around lm-evaluation-harness — instead of a hand-rolled
-# CASES array, to compare the two.
+# — MLX-LM's wrapper around lm-evaluation-harness — to compare the two.
 #
-# Multiple-choice tasks like arc_easy score by which answer the model
-# assigns the highest probability to, not by generating and checking text.
+# TASK isn't defined here — it names a benchmark bundled inside lm_eval:
+# AI2's ARC-Easy grade-school science questions, downloaded like the model.
+# Multiple-choice tasks score by which answer choice the model assigns the
+# highest probability to, not by generating text, reported as "acc"
+# (fraction correct) and "acc_norm" (the same, length-normalized).
 utils::title "#6: Eval (mlx_lm.evaluate)"
 
 VENV=".venv"
