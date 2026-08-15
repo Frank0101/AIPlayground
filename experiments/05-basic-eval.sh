@@ -60,11 +60,16 @@ for CASE in "${CASES[@]}"; do
 	EXPECTED_LOWER=$(printf '%s' "$EXPECTED" | tr '[:upper:]' '[:lower:]')
 
 	if [[ "$RESPONSE_LOWER" == *"$EXPECTED_LOWER"* ]]; then
-		echo "PASS  expected \"$EXPECTED\" in: $RESPONSE"
+		echo "PASS  (\"$PROMPT\" -> expected \"$EXPECTED\"): $RESPONSE"
 		PASS_COUNT=$((PASS_COUNT + 1))
 	else
-		echo "FAIL  expected \"$EXPECTED\", got: $RESPONSE"
+		echo "FAIL  (\"$PROMPT\" -> expected \"$EXPECTED\"): $RESPONSE"
 	fi
 done
 
-utils::title "Score: $PASS_COUNT/${#CASES[@]}"
+SUMMARY=$(awk -v pass="$PASS_COUNT" -v n="${#CASES[@]}" 'BEGIN {
+	rate = pass / n
+	printf "Pass rate: %d/%d (%.2f)", pass, n, rate
+}')
+
+utils::title "$SUMMARY"
