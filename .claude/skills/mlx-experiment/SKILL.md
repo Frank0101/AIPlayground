@@ -82,6 +82,11 @@ Points that are easy to get wrong:
   that call, separated by a blank line from the next pair. Variables that
   nothing acts on individually (`MODEL`, `MAX_TOKENS`, `PROMPT`, `TEMP`,
   in that order) are grouped together with no blank lines between them.
+  Any experiment-specific config beyond that canonical set (a repeat
+  count, a seed range, ...) is appended after `TEMP`, in the order it's
+  naturally used below. A data structure with its own explanatory comment
+  (a keyword array, a `CASES`-style list) comes last, right before
+  `print_config`.
 - **The CLI flag order mirrors the declaration order**: `--model` →
   `--prompt` → `--max-tokens` → `--temp` → `--verbose`, skipping whichever
   don't apply. This holds even when a value is a fixed constant rather
@@ -89,7 +94,9 @@ Points that are easy to get wrong:
   just isn't backed by a `TEMP` variable. A different `mlx_lm` subcommand
   (`chat`, `evaluate`, ...) has its own flag set entirely, but `--model`
   still leads, and that subcommand's own order should stay consistent
-  across every experiment that calls it.
+  across every experiment that calls it. A flag outside the canonical set
+  (`--seed`, ...) slots in after `--temp` and before `--verbose`, since
+  `--verbose` is purely about output volume and stays last regardless.
 - **`print_config` never gets a title argument** — it always prints its own
   fixed "Configuration" title via `utils::title` internally. Pass it only
   `"Label: value"` detail lines relevant to that experiment. Never include
@@ -111,7 +118,11 @@ Points that are easy to get wrong:
   after the first call — later calls skip the Hub's file-list/etag check
   since the model is already cached locally.
 - **A trailing "==> Score: ..." style summary line is just another
-  `utils::title` call**, not a raw `echo`.
+  `utils::title` call**, not a raw `echo`. When the summary needs
+  computation bash can't do natively (floating-point math via `awk`,
+  say), compute it into a variable first, then pass that variable to
+  `utils::title` — don't have the computing command print its own
+  `"==>"` line directly.
 - **A comment explaining a specific command gets a blank line above it**,
   separating it from whatever precedes it (a `utils::title` call, another
   statement), so it reads as attached to the command it explains below,

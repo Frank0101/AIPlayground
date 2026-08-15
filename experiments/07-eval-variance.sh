@@ -1,76 +1,60 @@
 #!/bin/bash
 set -e
-
+source "$(dirname "$0")/lib.sh"
 cd "$(dirname "$0")/.."
 
 # Experiment 7: how a non-zero temperature affects eval reliability.
 #
-# Experiment 5 grades a single greedy (temp 0) run per case, which is
-# reproducible but doesn't reflect how the model behaves with realistic
-# sampling. Here we run one open-ended question PASSES times at temp > 0,
-# using a different --seed each pass (0, 1, 2, ...) so the whole experiment
-# is itself reproducible even though each individual pass isn't — reusing
-# the same seed for every pass would just replay the same output each time.
-# The result is a pass rate and standard deviation instead of a single
-# PASS/FAIL.
-#
-# Grading is still case-insensitive substring matching, but against two
-# keyword lists instead of one expected string: a response passes only if
-# it contains every REQUIRED_KEYWORDS entry and none of the
-# FORBIDDEN_KEYWORDS entries. This lets a case reject specific wrong
-# answers (e.g. the common "sky is blue because it reflects the ocean"
-# myth) rather than only checking for a correct one.
+# Unlike experiment 5's single greedy run, this runs one question PASSES
+# times at temp > 0 with a different --seed each pass, so the whole
+# experiment is reproducible even though each pass isn't. Grading checks
+# two keyword lists: every REQUIRED_KEYWORDS entry must appear, and no
+# FORBIDDEN_KEYWORDS entry may — rejecting specific wrong answers, not
+# just checking for a right one.
+utils::title "#7: Eval Variance"
 
 VENV=".venv"
+utils::check_requirements "$VENV"
+
 CACHE=".hf-cache/experiment-07"
+utils::init_cache_cleanup "$CACHE"
 
 MODEL="mlx-community/Llama-3.2-3B-Instruct-4bit"
-
-PROMPT="In one sentence, explain why the sky appears blue during the day."
-
-# All of these must appear in the response...
-REQUIRED_KEYWORDS=("scatter" "blue" "wavelength" "light" "atmosphere")
-# ...and none of these may (each is tied to a specific wrong explanation:
-# reflection off water, light bending through a prism, or pollution).
-FORBIDDEN_KEYWORDS=("reflect" "ocean" "refract" "prism" "pollution")
-
 MAX_TOKENS=100
+PROMPT="In one sentence, explain why the sky appears blue during the day."
 TEMP=0.7
 PASSES=5
 
-cleanup() {
-	echo
-	echo "==> Removing downloaded model and experiment cache..."
-	rm -rf "$CACHE"
-}
-trap cleanup EXIT
+# REQUIRED_KEYWORDS must all appear in the response; none of
+# FORBIDDEN_KEYWORDS may (each tied to a specific wrong explanation:
+# reflection off water, light bending through a prism, or pollution).
+REQUIRED_KEYWORDS=("scatter" "blue" "wavelength" "light" "atmosphere")
+FORBIDDEN_KEYWORDS=("reflect" "ocean" "refract" "prism" "pollution")
 
-if [[ ! -x "$VENV/bin/mlx_lm.generate" ]]; then
-	echo "Error: the project environment is not ready." >&2
-	echo "Run ./setup.sh first." >&2
-	exit 1
-fi
+utils::print_config \
+	"Model: $MODEL" \
+	"Maximum output tokens: $MAX_TOKENS" \
+	"Prompt: $PROMPT" \
+	"Sampling temperature: $TEMP" \
+	"Passes: $PASSES" \
+	"Required keywords: ${REQUIRED_KEYWORDS[*]}" \
+	"Forbidden keywords: ${FORBIDDEN_KEYWORDS[*]}"
 
-echo "==> Running eval"
-echo "Model: $MODEL"
-echo "Hugging Face cache: $(pwd)/$CACHE"
-echo "Prompt: $PROMPT"
-echo "Passes: $PASSES at temperature $TEMP"
-echo "Required keywords: ${REQUIRED_KEYWORDS[*]}"
-echo "Forbidden keywords: ${FORBIDDEN_KEYWORDS[*]}"
-echo
+utils::title "Begin experiment"
 
 PASS_COUNT=0
 OFFLINE=0
 
 for SEED in $(seq 0 $((PASSES - 1))); do
-	RESPONSE=$(HF_HOME="$CACHE" HF_HUB_OFFLINE="$OFFLINE" "$VENV/bin/mlx_lm.generate" \
-		--model "$MODEL" \
-		--prompt "$PROMPT" \
-		--max-tokens "$MAX_TOKENS" \
-		--temp "$TEMP" \
-		--seed "$SEED" \
-		--verbose False)
+	RESPONSE=$(
+		HF_HOME="$CACHE" HF_HUB_OFFLINE="$OFFLINE" "$VENV/bin/mlx_lm.generate" \
+			--model "$MODEL" \
+			--prompt "$PROMPT" \
+			--max-tokens "$MAX_TOKENS" \
+			--temp "$TEMP" \
+			--seed "$SEED" \
+			--verbose False
+	)
 	OFFLINE=1
 
 	# Case-insensitive substring check, done with tr rather than bash's
@@ -101,9 +85,10 @@ for SEED in $(seq 0 $((PASSES - 1))); do
 	fi
 done
 
-echo
-awk -v pass="$PASS_COUNT" -v n="$PASSES" 'BEGIN {
-    rate = pass / n
-    stddev = sqrt(rate * (1 - rate))
-    printf "==> Pass rate: %d/%d (%.2f), std dev: %.2f\n", pass, n, rate, stddev
-}'
+SUMMARY=$(awk -v pass="$PASS_COUNT" -v n="$PASSES" 'BEGIN {
+	rate = pass / n
+	stddev = sqrt(rate * (1 - rate))
+	printf "Pass rate: %d/%d (%.2f), std dev: %.2f", pass, n, rate, stddev
+}')
+
+utils::title "$SUMMARY"

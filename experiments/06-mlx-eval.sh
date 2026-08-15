@@ -30,12 +30,15 @@ utils::title "Begin experiment"
 
 # TASK isn't defined here — it names AI2's ARC-Easy grade-school science
 # questions, downloaded like the model.
+#
 # LIMIT caps how many of that benchmark's questions are actually evaluated,
 # set to 5 here to keep this demo fast — a real benchmark run would omit
 # it and evaluate the full test split (2,376 questions for ARC-Easy).
+#
 # Multiple-choice tasks score by which answer choice the model assigns
-# the highest probability to, not by generating text. Each field in the
-# printed result:
+# the highest probability to, not by generating text.
+#
+# Each field in the printed result:
 # - "name" / "alias": the task's identifier and display name (both TASK
 #   here, since arc_easy doesn't define a separate alias)
 # - "sample_len": how many questions were actually evaluated (LIMIT)

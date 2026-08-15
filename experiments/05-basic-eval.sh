@@ -37,7 +37,7 @@ utils::print_config \
 
 utils::title "Begin experiment"
 
-PASS=0
+PASS_COUNT=0
 OFFLINE=0
 
 for CASE in "${CASES[@]}"; do
@@ -61,10 +61,10 @@ for CASE in "${CASES[@]}"; do
 
 	if [[ "$RESPONSE_LOWER" == *"$EXPECTED_LOWER"* ]]; then
 		echo "PASS  expected \"$EXPECTED\" in: $RESPONSE"
-		PASS=$((PASS + 1))
+		PASS_COUNT=$((PASS_COUNT + 1))
 	else
 		echo "FAIL  expected \"$EXPECTED\", got: $RESPONSE"
 	fi
 done
 
-utils::title "Score: $PASS/${#CASES[@]}"
+utils::title "Score: $PASS_COUNT/${#CASES[@]}"
