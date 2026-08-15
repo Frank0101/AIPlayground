@@ -70,11 +70,26 @@ Points that are easy to get wrong:
   that pattern shows up in the numbered sequence. Once it's been
   introduced once, later experiments reusing the same line can assume the
   reader already has that context and omit the repeat.
+- **Bullet the comment, not the prose, when explaining several distinct
+  enumerable things** — e.g. the individual fields in a command's output,
+  or a list of related concerns — using `# - item` with continuation
+  lines indented `#   `. Keep any surrounding context (what the thing is,
+  why it needs explaining) in normal flowing prose; reserve the bullets
+  for the actual enumerable items themselves, not the introduction to
+  them.
 - **Declare-then-immediately-act pairing.** Any variable that a lib
   function validates or registers (`VENV`, `CACHE`) is declared right above
   that call, separated by a blank line from the next pair. Variables that
   nothing acts on individually (`MODEL`, `MAX_TOKENS`, `PROMPT`, `TEMP`,
   in that order) are grouped together with no blank lines between them.
+- **The CLI flag order mirrors the declaration order**: `--model` →
+  `--prompt` → `--max-tokens` → `--temp` → `--verbose`, skipping whichever
+  don't apply. This holds even when a value is a fixed constant rather
+  than a variable — e.g. `--temp 0` still sits in the `--temp` slot; it
+  just isn't backed by a `TEMP` variable. A different `mlx_lm` subcommand
+  (`chat`, `evaluate`, ...) has its own flag set entirely, but `--model`
+  still leads, and that subcommand's own order should stay consistent
+  across every experiment that calls it.
 - **`print_config` never gets a title argument** — it always prints its own
   fixed "Configuration" title via `utils::title` internally. Pass it only
   `"Label: value"` detail lines relevant to that experiment. Never include
