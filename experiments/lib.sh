@@ -1,14 +1,21 @@
 #!/bin/bash
 
+UTILS_COLOR_TITLE=$'\033[32m'
+UTILS_COLOR_SUBTITLE=$'\033[33m'
+UTILS_COLOR_RESET=$'\033[0m'
+
 utils::title() {
 	echo
-	echo "==> $1"
+	echo "${UTILS_COLOR_TITLE}==> $1${UTILS_COLOR_RESET}"
+	if [[ -n "$2" ]]; then
+		echo "${UTILS_COLOR_SUBTITLE}$2${UTILS_COLOR_RESET}"
+	fi
 }
 
 utils::check_requirements() {
 	local venv="$1"
 
-	utils::title "Checking requirements"
+	utils::title "Checking requirements.."
 
 	if [[ ! -x "$venv/bin/mlx_lm.generate" ]]; then
 		echo "Error: the project environment is not ready." >&2
@@ -23,7 +30,7 @@ utils::init_cache_cleanup() {
 	UTILS_CACHE="$1"
 
 	cleanup() {
-		utils::title "Removing downloaded model and experiment cache..."
+		utils::title "Removing downloaded model and experiment cache.."
 		rm -rf "$UTILS_CACHE"
 	}
 	trap cleanup EXIT

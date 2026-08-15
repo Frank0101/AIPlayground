@@ -1,50 +1,35 @@
 #!/bin/bash
 set -e
-
+source "$(dirname "$0")/lib.sh"
 cd "$(dirname "$0")/.."
 
 # Experiment 3: a back-and-forth conversation, unlike experiments 1 and 2
-# where a single prompt gets a single reply.
+# where a single prompt gets a single reply. mlx_lm.chat already handles
+# this out of the box (try `mlx_lm.chat --model <model>`) — we build the
+# loop ourselves on top of stateless mlx_lm.generate to see how it works.
 #
-# mlx_lm.generate is stateless — it has no memory between calls. To hold a
-# conversation we build that memory ourselves: every turn we append the new
-# exchange to a growing HISTORY string and re-send the whole thing as the
-# prompt, so the model always sees the full conversation so far. This is
-# also why replies get slower to arrive as the conversation grows — more
-# text has to be re-processed on every turn.
-#
-# For simplicity, HISTORY is sent as one plain-text block (the model's chat
-# template wraps it as a single user turn), rather than as distinct
-# role-tagged turns. mlx_lm.chat, installed alongside mlx_lm.generate,
-# handles proper role-based multi-turn history for you out of the box —
-# try `mlx_lm.chat --model <model>` to compare.
+# Each turn appends to a growing HISTORY string re-sent as the whole prompt
+# (sent as one plain-text block, not distinct role-tagged turns), so replies
+# get slower as the conversation grows and more text must be re-processed.
+utils::title "#3: Chat"
 
 VENV=".venv"
+utils::check_requirements "$VENV"
+
 CACHE=".hf-cache/experiment-03"
+utils::init_cache_cleanup "$CACHE"
 
 MODEL="mlx-community/Llama-3.2-3B-Instruct-4bit"
-
 MAX_TOKENS=300
 TEMP=0.7
 
-cleanup() {
-	echo
-	echo "==> Removing downloaded model and experiment cache..."
-	rm -rf "$CACHE"
-}
-trap cleanup EXIT
+utils::print_config \
+	"Model: $MODEL" \
+	"Maximum output tokens: $MAX_TOKENS" \
+	"Sampling temperature: $TEMP"
 
-if [[ ! -x "$VENV/bin/mlx_lm.generate" ]]; then
-	echo "Error: the project environment is not ready." >&2
-	echo "Run ./setup.sh first." >&2
-	exit 1
-fi
-
-echo "==> Starting chat"
-echo "Model: $MODEL"
-echo "Hugging Face cache: $(pwd)/$CACHE"
-echo "Type 'exit' or 'quit' to end the conversation."
-echo
+utils::title "Begin experiment" \
+	"Type 'exit' or 'quit' to end the conversation."
 
 HISTORY=""
 OFFLINE=0
@@ -54,12 +39,14 @@ while read -r -p "You: " INPUT; do
 
 	HISTORY+="User: $INPUT"$'\n'"Assistant:"
 
-	RESPONSE=$(HF_HOME="$CACHE" HF_HUB_OFFLINE="$OFFLINE" "$VENV/bin/mlx_lm.generate" \
-		--model "$MODEL" \
-		--prompt "$HISTORY" \
-		--max-tokens "$MAX_TOKENS" \
-		--temp "$TEMP" \
-		--verbose False)
+	RESPONSE=$(
+		HF_HOME="$CACHE" HF_HUB_OFFLINE="$OFFLINE" "$VENV/bin/mlx_lm.generate" \
+			--model "$MODEL" \
+			--prompt "$HISTORY" \
+			--max-tokens "$MAX_TOKENS" \
+			--temp "$TEMP" \
+			--verbose False
+	)
 
 	# After the first turn the model is cached, so later turns skip the
 	# Hub's file-list/etag check and load straight from $CACHE.

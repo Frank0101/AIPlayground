@@ -6,16 +6,11 @@ cd "$(dirname "$0")/.."
 # Experiment 2: same model and prompt as experiment 1, but with sampling
 # temperature > 0 instead of MLX-LM's default 0.0 (greedy decoding).
 #
-# The model always outputs a probability distribution over the next token;
-# what temperature changes is how a token gets picked from it. At temp 0.0,
-# MLX-LM skips random sampling entirely and deterministically takes the
-# highest-probability token (greedy decoding), which is why experiment 1
-# produces the same output on every run in practice — though not as a hard
-# guarantee: if the top two tokens' probabilities are close enough, tiny
-# floating-point differences (op ordering, GPU architecture) can flip which
-# one wins. A temperature above 0 instead draws a random sample from that
-# distribution, so responses vary between runs by design. Run this script
-# more than once to see it.
+# At temp 0.0 MLX-LM deterministically picks the top-probability token
+# instead of sampling, which is why experiment 1 is reproducible (not
+# guaranteed — near-tied logits can flip on floating-point noise). Above
+# 0 it samples randomly instead, so responses vary — run this more than
+# once to see it.
 utils::title "#2: Sampling temperature"
 
 VENV=".venv"
