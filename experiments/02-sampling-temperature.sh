@@ -1,47 +1,41 @@
 #!/bin/bash
 set -e
-
+source "$(dirname "$0")/lib.sh"
 cd "$(dirname "$0")/.."
 
 # Experiment 2: same model and prompt as experiment 1, but with sampling
 # temperature > 0 instead of MLX-LM's default 0.0 (greedy decoding).
 #
-# At temp 0.0 the model always picks the single most likely next token, so
-# experiment 1 produces the exact same output on every run. A temperature
-# above 0 makes token selection probabilistic instead of always-the-top-pick,
-# so responses vary between runs. Run this script more than once to see it.
+# The model always outputs a probability distribution over the next token;
+# what temperature changes is how a token gets picked from it. At temp 0.0,
+# MLX-LM skips random sampling entirely and deterministically takes the
+# highest-probability token (greedy decoding), which is why experiment 1
+# produces the same output on every run in practice — though not as a hard
+# guarantee: if the top two tokens' probabilities are close enough, tiny
+# floating-point differences (op ordering, GPU architecture) can flip which
+# one wins. A temperature above 0 instead draws a random sample from that
+# distribution, so responses vary between runs by design. Run this script
+# more than once to see it.
+utils::title "#2: Sampling temperature"
 
 VENV=".venv"
+utils::check_requirements "$VENV"
+
 CACHE=".hf-cache/experiment-02"
+utils::init_cache_cleanup "$CACHE"
 
 MODEL="mlx-community/Llama-3.2-3B-Instruct-4bit"
-
-PROMPT="Explain the difference between synchronous and asynchronous processing in three short paragraphs."
-
 MAX_TOKENS=300
+PROMPT="Explain the difference between synchronous and asynchronous processing in three short paragraphs."
 TEMP=0.7
 
-cleanup() {
-	echo
-	echo "==> Removing downloaded model and experiment cache..."
-	rm -rf "$CACHE"
-}
-trap cleanup EXIT
+utils::print_config \
+	"Model: $MODEL" \
+	"Maximum output tokens: $MAX_TOKENS" \
+	"Prompt: $PROMPT" \
+	"Sampling temperature: $TEMP"
 
-if [[ ! -x "$VENV/bin/mlx_lm.generate" ]]; then
-	echo "Error: the project environment is not ready." >&2
-	echo "Run ./setup.sh first." >&2
-	exit 1
-fi
-
-echo "==> Running local model"
-echo "Model: $MODEL"
-echo "Hugging Face cache: $(pwd)/$CACHE"
-echo "Maximum output tokens: $MAX_TOKENS"
-echo "Sampling temperature: $TEMP"
-echo
-
-# HF_HOME redirects MLX-LM's Hugging Face cache to this experiment's folder.
+utils::title "Begin experiment"
 HF_HOME="$CACHE" \
 	"$VENV/bin/mlx_lm.generate" \
 	--model "$MODEL" \
