@@ -64,7 +64,8 @@ for SEED in $(seq 0 $((PASSES - 1))); do
 	JUDGE_PROMPT="Question: $PROMPT"$'\n\n'
 	JUDGE_PROMPT+="Answer: $RESPONSE"$'\n\n'
 	JUDGE_PROMPT+="$RUBRIC"$'\n\n'
-	JUDGE_PROMPT+="Does the answer meet this bar? Respond with exactly one word: PASS or FAIL."
+	JUDGE_PROMPT+="Does the answer meet this bar? "
+	JUDGE_PROMPT+="Respond with exactly one word: PASS or FAIL."
 
 	# --allowedTools "" stops the judge from invoking any tools (it only
 	# needs to read text and reply with a verdict), which also avoids it

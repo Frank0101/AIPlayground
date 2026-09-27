@@ -121,7 +121,9 @@ The sections below cover the points that are easy to get wrong.
   - a long multi-line string (`RUBRIC` in 08, `SYSTEM_PROMPT` in 10), so
     it reads as its own block
   - a data structure with its own explanatory comment (a keyword array, a
-    `CASES`-style list), last, right before `print_config`
+    `CASES`-style list), last, right before `print_config` — unless
+    something above uses it, in which case it comes before that (`TOOLS`
+    before `SYSTEM_PROMPT` in 10)
 - **Only model/experiment config goes in that block.** A constant that's
   part of the script's own logic rather than something shaping the
   model's behavior or the experiment's setup (e.g. the fixed `REFUSAL`
@@ -133,19 +135,23 @@ The sections below cover the points that are easy to get wrong.
   model reacts, looped as `for PROMPT in "${TEST_PROMPTS[@]}"`. `CASES`
   (05) holds graded eval cases, each a prompt plus its expected answer as
   `"prompt|||expected"`, scored PASS/FAIL. `print_config` shows only the
-  list's size (`"Cases: ${#CASES[@]}"`, `"Test prompts: ${#TEST_PROMPTS[@]}"`),
-  since each entry is printed as the loop reaches it.
+  list's size (`"Cases: ${#CASES[@]}"`,
+  `"Test prompts: ${#TEST_PROMPTS[@]}"`), since each entry is printed as
+  the loop reaches it.
 - **`print_config` takes only `"Label: value"` lines**, each backed by a
   variable that shapes the run, never a hard-coded description. It takes
-  no title argument, since it prints its own fixed "Configuration"
-  title. Never include a "Hugging Face cache: ..." line:
-  `CACHE` is already visible a few lines above, and its resolved path adds
-  nothing.
+  no title argument, since it prints its own fixed "Configuration" title.
+  Never include a "Hugging Face cache: ..." line: `CACHE` is already
+  visible a few lines above, and its resolved path adds nothing.
 
 ## Strings
 
-- **Wrap a single-line string past 80 columns with `""\`** (e.g. `PROMPT`
-  in 01/02, `RUBRIC` in 08):
+- **80 columns is a guideline, not a hard limit.** Wrap a line when that
+  makes it easier to read. Leave it long when wrapping would add more
+  clutter than it saves, e.g. a line only a few characters over, an
+  `echo` of one output line, or an array entry (`CASES`, `TEST_PROMPTS`).
+- **A long single-line string wraps with `""\`** (e.g. `PROMPT` in
+  01/02, `RUBRIC` in 08):
 
   ```bash
   RUBRIC="A correct answer must explain that shorter wavelengths of light ""\
@@ -159,10 +165,38 @@ The sections below cover the points that are easy to get wrong.
   line, and don't indent continuation lines — they're inside the quotes,
   so any indentation would end up in the string.
 
-- **Don't use `""\` for text that needs real line breaks** between
-  sections (`JUDGE_PROMPT` in 08, `FINAL_PROMPT` in 10) — build those with
-  `VAR+=...$'\n\n'` — nor for strings grown in a loop (`HISTORY+=` in 03)
-  or individual array entries (`CASES`, `TEST_PROMPTS`).
+- **Text that needs real line breaks** between lines or sections
+  (`SYSTEM_PROMPT` in 10, `JUDGE_PROMPT` in 08) is built with `VAR+=`, not
+  `""\` — don't mix the two. To wrap a long line, split it across more
+  `+=` lines, adding `$'\n'` only where a real line break belongs:
+
+  ```bash
+  SYSTEM_PROMPT="Only call one of the tools below if answering needs "
+  SYSTEM_PROMPT+="information you don't have, such as live data; otherwise, "
+  SYSTEM_PROMPT+="answer directly."$'\n'
+  SYSTEM_PROMPT+='To call one, reply with only {"name": "<tool>", '
+  SYSTEM_PROMPT+='"parameters": {...}} and nothing else.'$'\n\n'
+  ```
+
+- **Structured text such as JSON goes in a quoted heredoc** (`TOOLS` in
+  10), inside the usual `VAR=$(` … `)` layout, with the body and `EOF` at
+  column 0. The quoted `'EOF'` stops bash from expanding anything inside,
+  so the JSON needs no escaping and stays pretty-printed. It sits in the
+  config block's commented section, before whatever uses it (`TOOLS`
+  comes before the `SYSTEM_PROMPT` that includes it):
+
+  ```bash
+  TOOLS=$(
+  	cat <<'EOF'
+  [
+    {
+      "name": "get_exchange_rate",
+      ...
+    }
+  ]
+  EOF
+  )
+  ```
 
 ## Calling mlx_lm
 
@@ -198,14 +232,14 @@ The sections below cover the points that are easy to get wrong.
   `OFFLINE=1` right after the first call. Later calls then skip the Hub's
   file-list/etag check, since the model is already cached locally.
 
-## Output
+## Output and checks
 
 - **`utils::title` takes an optional subtitle** as `$2`, printed on its own
   (yellow) line under the (green) title. Use it for a short instruction
   the user needs right before an interactive or slow step (e.g.
   `"Type 'exit' or 'quit' to end the conversation."`, or
-  `"Downloading model, please wait..."` when output that would normally
-  show progress has been silenced).
+  `"Downloading model and starting chat session, please wait.."` in 04,
+  where the download progress bars have been silenced).
 - **A closing summary line ("Pass rate: ...") is another `utils::title`
   call**, not a raw `echo`. If it needs computation bash can't do natively
   (floating-point math via `awk`), compute it into a variable first and
@@ -314,10 +348,10 @@ way.
 
 ## Workflow expectations
 
-- Work on one experiment at a time unless told otherwise.
 - Every experiment in `experiments/` is expected to follow this skill.
-  When a new `lib.sh` function or convention is agreed on, add it here
-  and apply it to every existing experiment without being asked again.
+- Work on one experiment at a time unless told otherwise. The exception
+  is a newly agreed `lib.sh` function or convention: add it here and apply
+  it to every existing experiment without being asked again.
 - After any change to `lib.sh` or a script, `bash -n` it and do a quick
   smoke run (stop it after a few seconds if it would otherwise download a
   model or wait for interactive input) to confirm it still runs past

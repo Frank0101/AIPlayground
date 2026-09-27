@@ -4,20 +4,20 @@ source "$(dirname "$0")/lib.sh"
 cd "$(dirname "$0")/.."
 
 # Experiment 10: a minimal tool-calling harness. SYSTEM_PROMPT only
-# describes the available tool; the model itself decides whether a
-# question needs a tool at all, and with which arguments.
+# describes the available tools; the model itself decides whether a
+# question needs a tool at all, which one, and with which arguments.
 #
 # The model never runs anything: if it replies with a JSON tool call, this
-# script parses and validates it like any untrusted input, runs the tool
-# (an exchange-rate API), and sends the result back for a second call to
-# answer from. Any other reply is the answer itself, printed as-is.
+# script runs the matching tool, validating its parameters like any
+# untrusted input, then replays the exchange with the tool's result for a
+# second call to answer from. Any other reply is the answer itself.
 utils::title "#10: Tool Calling"
 
 VENV=".venv"
 utils::check_requirements "$VENV"
 
 if ! command -v jq &>/dev/null || ! command -v curl &>/dev/null; then
-	echo "Error: experiment 10 requires 'jq' and 'curl'." >&2
+	echo "Error: 'jq' or 'curl' is not installed or not in PATH." >&2
 	exit 1
 fi
 
@@ -28,19 +28,33 @@ MODEL="mlx-community/Llama-3.2-3B-Instruct-4bit"
 MAX_TOKENS=300
 TEMP=0
 
+# The tools the model may call, described as JSON: each entry's "name" and
+# "parameters" match the shape the model must send back to call it.
+TOOLS=$(
+	cat <<'EOF'
+[
+  {
+    "name": "get_exchange_rate",
+    "description": "Latest daily exchange rate between two currencies (ECB)",
+    "parameters": {
+      "base": "Three-letter ISO 4217 code of the currency to convert from",
+      "quote": "Three-letter ISO 4217 code of the currency to convert to"
+    }
+  }
+]
+EOF
+)
+
 # The system prompt is a separate message, placed before the user's question
 # via the chat template, holding standing instructions for the whole
-# exchange. It's the only way the model learns the tool exists: the tool
-# itself lives in this script, so the model just gets a description of it
-# (name, what it returns, its arguments) and the exact format to request it.
-SYSTEM_PROMPT="You have access to one tool. get_exchange_rate(base, quote) ""\
-returns the latest daily exchange rate from the base currency to the quote ""\
-currency, as published by the European Central Bank; base and quote are ""\
-three-letter ISO 4217 currency codes. Only use it when answering needs ""\
-current exchange-rate data you don't have. To use it, reply with only a JSON ""\
-object of the form {\"name\": \"get_exchange_rate\", \"parameters\": ""\
-{\"base\": \"...\", \"quote\": \"...\"}} and nothing else. Otherwise, answer ""\
-the question directly."
+# exchange. It's the only way the model learns which tools exist: they live
+# in this script, so the model just gets TOOLS and the format to call one.
+SYSTEM_PROMPT="Only call one of the tools below if answering needs "
+SYSTEM_PROMPT+="information you don't have, such as live data; otherwise, "
+SYSTEM_PROMPT+="answer directly."$'\n'
+SYSTEM_PROMPT+='To call one, reply with only {"name": "<tool>", '
+SYSTEM_PROMPT+='"parameters": {...}} and nothing else.'$'\n'
+SYSTEM_PROMPT+="$TOOLS"
 
 # One prompt that needs live data and one that doesn't, to show the model
 # choosing between calling the tool and answering directly.
@@ -74,53 +88,64 @@ for PROMPT in "${TEST_PROMPTS[@]}"; do
 	)
 	OFFLINE=1
 
-	# capture(...) pulls out the outermost {...} in case the model wrapped the
-	# call in extra text; if there's none, or it isn't valid JSON, jq -e fails
-	# and the reply is treated as a direct answer.
-	if ! TOOL_CALL=$(
+	# A tool call is a JSON object with a "name" in the reply; capture(...)
+	# pulls out the outermost {...} in case the model wrapped it in extra
+	# text. If there's none, TOOL_CALL is empty and the reply is the answer.
+	TOOL_CALL=$(
 		printf '%s' "$RESPONSE" |
-			jq -Rser 'capture("(?<call>\\{.*\\})"; "s").call | fromjson | [.name, .parameters.base, .parameters.quote] | @tsv' 2>/dev/null
-	); then
-		echo "Response (no tool): $RESPONSE"
-		echo
-		continue
-	fi
-
-	echo "Tool call: $RESPONSE"
-	IFS=$'\t' read -r TOOL BASE QUOTE <<<"$TOOL_CALL"
-
-	if [[ "$TOOL" != "get_exchange_rate" ]]; then
-		echo "Rejected: unknown tool \"$TOOL\"."
-		echo
-		continue
-	fi
-	if [[ ! "$BASE" =~ ^[A-Z]{3}$ || ! "$QUOTE" =~ ^[A-Z]{3}$ ]]; then
-		echo "Rejected: base and quote must be three-letter currency codes."
-		echo
-		continue
-	fi
-
-	TOOL_RESULT=$(curl -fsS \
-		-H "User-Agent: AIPlayground/1.0" \
-		"https://api.frankfurter.dev/v2/rate/$BASE/$QUOTE?providers=ECB")
-
-	echo "Tool result: $TOOL_RESULT"
-
-	# No --system-prompt on this call: the tool has already run, and without
-	# the tool description the model can't ask for it again.
-	FINAL_PROMPT="$PROMPT"$'\n\n'
-	FINAL_PROMPT+="Result of get_exchange_rate($BASE, $QUOTE): $TOOL_RESULT"$'\n\n'
-	FINAL_PROMPT+="Answer the question using this result, including the rate's date."
-
-	FINAL_RESPONSE=$(
-		HF_HOME="$CACHE" HF_HUB_OFFLINE="$OFFLINE" "$VENV/bin/mlx_lm.generate" \
-			--model "$MODEL" \
-			--prompt "$FINAL_PROMPT" \
-			--max-tokens "$MAX_TOKENS" \
-			--temp "$TEMP" \
-			--verbose False
+			jq -Rsc '
+				capture("(?<call>\\{.*\\})"; "s").call | fromjson
+				| select(type == "object" and has("name"))
+			' 2>/dev/null || true
 	)
 
-	echo "Response: $FINAL_RESPONSE"
+	if [[ -z "$TOOL_CALL" ]]; then
+		echo "Tool: none"
+	else
+		TOOL=$(jq -r '.name' <<<"$TOOL_CALL")
+
+		# Run the requested tool, leaving its bare result in TOOL_RESULT. The
+		# model's output is untrusted, so each tool validates its own
+		# parameters, and anything invalid becomes an error result instead.
+		case "$TOOL" in
+		get_exchange_rate)
+			BASE=$(jq -r '.parameters.base' <<<"$TOOL_CALL")
+			QUOTE=$(jq -r '.parameters.quote' <<<"$TOOL_CALL")
+			if [[ "$BASE" =~ ^[A-Z]{3}$ && "$QUOTE" =~ ^[A-Z]{3}$ ]]; then
+				TOOL_RESULT=$(
+					curl -fsS \
+						-H "User-Agent: AIPlayground/1.0" \
+						"https://api.frankfurter.dev/v2/rate/$BASE/$QUOTE?providers=ECB"
+				)
+			else
+				TOOL_RESULT="Error: base and quote must be three-letter currency codes."
+			fi
+			;;
+		*)
+			TOOL_RESULT="Error: unknown tool \"$TOOL\"."
+			;;
+		esac
+
+		# Replay the exchange so far as a plain-text transcript, like
+		# experiment 03's HISTORY: the question, the model's own tool call, and
+		# the tool's result, ending on "Assistant:" for the model to continue.
+		FINAL_PROMPT="User: $PROMPT"$'\n'
+		FINAL_PROMPT+="Assistant: $RESPONSE"$'\n'
+		FINAL_PROMPT+="Tool result: $TOOL_RESULT"$'\n'
+		FINAL_PROMPT+="Assistant:"
+
+		RESPONSE=$(
+			HF_HOME="$CACHE" HF_HUB_OFFLINE="$OFFLINE" "$VENV/bin/mlx_lm.generate" \
+				--model "$MODEL" \
+				--prompt "$FINAL_PROMPT" \
+				--max-tokens "$MAX_TOKENS" \
+				--temp "$TEMP" \
+				--verbose False
+		)
+
+		echo "Tool: $TOOL_CALL -> $TOOL_RESULT"
+	fi
+
+	echo "Response: $RESPONSE"
 	echo
 done
