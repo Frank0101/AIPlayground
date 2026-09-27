@@ -5,8 +5,8 @@ cd "$(dirname "$0")/.."
 
 # Experiment 03: a back-and-forth conversation, unlike experiments 01 and 02
 # where a single prompt gets a single reply. mlx_lm.chat already handles
-# this out of the box (see experiment 04) — we build the loop ourselves on
-# top of stateless mlx_lm.generate to see how it works.
+# this out of the box (see experiment 04) — we build a minimal chat
+# harness ourselves on top of stateless mlx_lm.generate to see how it works.
 #
 # Each turn appends to a growing HISTORY string re-sent as the whole prompt
 # (sent as one plain-text block, not distinct role-tagged turns), so replies

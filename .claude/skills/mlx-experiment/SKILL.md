@@ -175,7 +175,7 @@ The sections below cover the points that are easy to get wrong.
   SYSTEM_PROMPT+="information you don't have, such as live data; otherwise, "
   SYSTEM_PROMPT+="answer directly."$'\n'
   SYSTEM_PROMPT+='To call one, reply with only {"name": "<tool>", '
-  SYSTEM_PROMPT+='"parameters": {...}} and nothing else.'$'\n\n'
+  SYSTEM_PROMPT+='"parameters": {...}} and nothing else.'$'\n'
   ```
 
 - **Structured text such as JSON goes in a quoted heredoc** (`TOOLS` in
@@ -211,9 +211,13 @@ The sections below cover the points that are easy to get wrong.
   Other subcommands (`mlx_lm.chat`, `mlx_lm.evaluate`, ...) have their
   own flag sets, but `--model` still leads, and each subcommand's order
   stays the same across every experiment that calls it.
-- **Capturing a call into a variable** (`RESPONSE=$(...)`) puts `VAR=$(`
-  alone on the first line, the command and its flags indented one level
-  further on their own lines, and the closing `)` alone on the last line:
+- **Capturing a multi-line command into a variable** (`RESPONSE=$(...)`,
+  or any command split with `\` or a pipe) puts `VAR=$(` alone on the
+  first line, the command and its flags indented one level further on
+  their own lines, and the closing `)` alone on the last line. A one-line
+  command stays on one line (`VERDICT=$(claude -p ...)` in 08), including
+  one whose quoted script argument spans lines (the `awk` `SUMMARY` in
+  05/06/08):
 
   ```bash
   RESPONSE=$(

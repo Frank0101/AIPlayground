@@ -1,12 +1,13 @@
 # AIPlayground
 
 A personal playground for running language models locally and exploring
-sampling, chat, evaluation, and guardrails, primarily using
+sampling, chat, evaluation, guardrails, and tool calling, primarily using
 [MLX](https://github.com/ml-explore/mlx) on Apple Silicon.
 
 The repository currently contains ten experiments. They all use the 4-bit
 MLX build of Meta's Llama 3.2 3B Instruct model; experiment 08 additionally
-uses Claude as a remote judge.
+uses Claude as a remote judge, and experiment 10 calls a public
+exchange-rate API as a tool.
 
 ## Requirements
 
@@ -53,9 +54,9 @@ pattern.
 |  05 | [`05-basic-eval.sh`](experiments/05-basic-eval.sh)                     | Runs four deterministic, hand-written question-and-answer cases and grades them with case-insensitive substring matching.                                                                                                                                                                                                                                                                 |
 |  06 | [`06-eval-variance.sh`](experiments/06-eval-variance.sh)               | Runs one open-ended case five times at temperature `0.7`, using seeds 0–4 and required/forbidden keyword grading, then reports pass rate and standard deviation.                                                                                                                                                                                                                          |
 |  07 | [`07-mlx-eval.sh`](experiments/07-mlx-eval.sh)                         | Runs five examples from the published ARC-Easy benchmark through `mlx_lm.evaluate` and `lm-evaluation-harness`.                                                                                                                                                                                                                                                                           |
-|  08 | [`08-llm-judge.sh`](experiments/08-llm-judge.sh)                       | Runs the same seeded evaluation pattern as experiment 06, but sends each generated answer and an explicit rubric to Claude for a `PASS`/`FAIL` judgment. This is the only experiment that sends generated content to a third-party service.<br><sub>\* Requires the [`claude` CLI](https://docs.anthropic.com/en/docs/claude-code/overview), authenticated and available on `PATH`.</sub> |
+|  08 | [`08-llm-judge.sh`](experiments/08-llm-judge.sh)                       | Runs the same seeded evaluation pattern as experiment 06, but sends each generated answer and an explicit rubric to Claude for a `PASS`/`FAIL` judgment. This is the only experiment that sends generated answers to a third-party service.<br><sub>\* Requires the [`claude` CLI](https://docs.anthropic.com/en/docs/claude-code/overview), authenticated and available on `PATH`.</sub> |
 |  09 | [`09-guardrail.sh`](experiments/09-guardrail.sh)                       | Applies case-insensitive blocked-word checks to the prompt before inference and to the response after it, demonstrating a refused prompt, a withheld response, and one that passes both.                                                                                                                                                                                                  |
-|  10 | [`10-tool-calling.sh`](experiments/10-tool-calling.sh)                 | Describes an exchange-rate tool in the system prompt and lets the model decide whether each question needs it; the script validates and runs any tool call, then feeds the result back for a final answer.<br><sub>\* Requires `curl`, `jq`, and internet access to fetch exchange rates.</sub>                                                                                           |
+|  10 | [`10-tool-calling.sh`](experiments/10-tool-calling.sh)                 | Describes the available tools (an exchange-rate API) as JSON in the system prompt and lets the model decide whether each question needs one; the script validates and runs any tool call, then replays the exchange with the tool's result for a final answer.<br><sub>\* Requires `curl`, `jq`, and internet access to fetch exchange rates.</sub>                                       |
 
 Experiments 03 and 04 are interactive. The others run their predefined prompts
 and exit on their own.
@@ -129,7 +130,7 @@ and exit on their own.
   string/keyword matching. Catches a correct answer phrased differently
   than expected, and a wrong answer that happens to contain the right
   words — at the cost of needing a rubric and, unlike every other
-  experiment here, sending your generated content to a third-party
+  experiment here, sending your generated answers to a third-party
   service and consuming its usage, rather than judging it entirely on
   your own machine — see experiment 08.
 - **Rubric**: the criteria a judge is given to grade against, spelled out
@@ -151,6 +152,13 @@ and exit on their own.
 
 ### Tooling
 
+- **Harness**: the code around a model that turns single calls into a
+  working system — sending prompts, keeping the conversation history,
+  checking inputs and outputs, running the tools the model asks for. The
+  model itself only maps text to text; everything else is the harness
+  (experiments 03, 09 and 10). An evaluation harness such as
+  `lm-evaluation-harness` is one specialised for running benchmarks
+  (experiment 07).
 - **Hugging Face**: a platform/repository where models, datasets, and
   tokenisers are published and downloaded from. By default, loading a model
   checks the Hub for the current file list/etags even if it's already

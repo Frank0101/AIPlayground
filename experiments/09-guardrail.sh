@@ -3,8 +3,8 @@ set -e
 source "$(dirname "$0")/lib.sh"
 cd "$(dirname "$0")/.."
 
-# Experiment 09: a keyword-based guardrail, checking the prompt before
-# generation and the response after it.
+# Experiment 09: a keyword-based guardrail in the harness around the model,
+# checking the prompt before generation and the response after it.
 #
 # A blocked prompt word returns a fixed refusal without calling the model;
 # a blocked response word withholds the model's reply behind the same
