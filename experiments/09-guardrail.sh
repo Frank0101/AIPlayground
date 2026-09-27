@@ -3,14 +3,14 @@ set -e
 source "$(dirname "$0")/lib.sh"
 cd "$(dirname "$0")/.."
 
-# Experiment 09: a keyword-based guardrail, distinct from both prior ideas.
+# Experiment 09: a keyword-based guardrail, checking the prompt before
+# generation and the response after it.
 #
-# Evals (05, 06, 07, 08) grade the model's own output after generation;
-# constrained decoding (discussed but not built here) restricts what the
-# model can generate, token by token, during generation. This is neither:
-# it inspects the prompt BEFORE generation and returns a fixed refusal
-# without calling the model. Simple, but blunt — it can't tell intent
-# from wording, so it blocks any prompt containing the word.
+# A blocked prompt word returns a fixed refusal without calling the model;
+# a blocked response word withholds the model's reply behind the same
+# refusal. Evals (05, 06, 07, 08) also inspect output, but only to score
+# it, while a guardrail stops it reaching the user. Simple, but blunt: word
+# matching can't tell intent from wording.
 utils::title "#09: Guardrail"
 
 VENV=".venv"
@@ -24,12 +24,14 @@ MAX_TOKENS=300
 TEMP=0.7
 
 # Case-insensitive: any prompt containing one of these gets refused without
-# reaching the model.
-BLOCKED_WORDS=("pizza")
+# reaching the model, and any response containing one of these is withheld.
+BLOCKED_PROMPT_WORDS=("pizza")
+BLOCKED_RESPONSE_WORDS=("paris")
 
-# A couple of example prompts to show both branches: one blocked, one not.
+# One prompt for each outcome: blocked prompt, blocked response, allowed.
 TEST_PROMPTS=(
 	"What's the best pizza topping?"
+	"What is the capital of France?"
 	"What is the capital of Italy?"
 )
 
@@ -37,7 +39,8 @@ utils::print_config \
 	"Model: $MODEL" \
 	"Maximum output tokens: $MAX_TOKENS" \
 	"Sampling temperature: $TEMP" \
-	"Blocked words: ${BLOCKED_WORDS[*]}" \
+	"Blocked prompt words: ${BLOCKED_PROMPT_WORDS[*]}" \
+	"Blocked response words: ${BLOCKED_RESPONSE_WORDS[*]}" \
 	"Test prompts: ${#TEST_PROMPTS[@]}"
 
 utils::title "Begin experiment"
@@ -49,7 +52,7 @@ for PROMPT in "${TEST_PROMPTS[@]}"; do
 	echo "Prompt: $PROMPT"
 
 	BLOCKED=""
-	for WORD in "${BLOCKED_WORDS[@]}"; do
+	for WORD in "${BLOCKED_PROMPT_WORDS[@]}"; do
 		if utils::contains_ci "$PROMPT" "$WORD"; then
 			BLOCKED="$WORD"
 			break
@@ -57,18 +60,31 @@ for PROMPT in "${TEST_PROMPTS[@]}"; do
 	done
 
 	if [[ -n "$BLOCKED" ]]; then
-		echo "Response: $REFUSAL  (blocked word \"$BLOCKED\" — model not called)"
-	else
-		RESPONSE=$(
-			HF_HOME="$CACHE" HF_HUB_OFFLINE="$OFFLINE" "$VENV/bin/mlx_lm.generate" \
-				--model "$MODEL" \
-				--prompt "$PROMPT" \
-				--max-tokens "$MAX_TOKENS" \
-				--temp "$TEMP" \
-				--verbose False
-		)
-		OFFLINE=1
+		echo "Response: $REFUSAL (blocked prompt word \"$BLOCKED\" — model not called)"
+		echo
+		continue
+	fi
 
+	RESPONSE=$(
+		HF_HOME="$CACHE" HF_HUB_OFFLINE="$OFFLINE" "$VENV/bin/mlx_lm.generate" \
+			--model "$MODEL" \
+			--prompt "$PROMPT" \
+			--max-tokens "$MAX_TOKENS" \
+			--temp "$TEMP" \
+			--verbose False
+	)
+	OFFLINE=1
+
+	for WORD in "${BLOCKED_RESPONSE_WORDS[@]}"; do
+		if utils::contains_ci "$RESPONSE" "$WORD"; then
+			BLOCKED="$WORD"
+			break
+		fi
+	done
+
+	if [[ -n "$BLOCKED" ]]; then
+		echo "Response: $REFUSAL (blocked response word \"$BLOCKED\" — model's reply withheld)"
+	else
 		echo "Response: $RESPONSE"
 	fi
 	echo

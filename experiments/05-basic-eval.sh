@@ -55,10 +55,10 @@ for CASE in "${CASES[@]}"; do
 	OFFLINE=1
 
 	if utils::contains_ci "$RESPONSE" "$EXPECTED"; then
-		echo "PASS  (\"$PROMPT\" -> expected \"$EXPECTED\"): $RESPONSE"
+		echo "PASS (\"$PROMPT\" -> expected \"$EXPECTED\"): $RESPONSE"
 		PASS_COUNT=$((PASS_COUNT + 1))
 	else
-		echo "FAIL  (\"$PROMPT\" -> expected \"$EXPECTED\"): $RESPONSE"
+		echo "FAIL (\"$PROMPT\" -> expected \"$EXPECTED\"): $RESPONSE"
 	fi
 done
 

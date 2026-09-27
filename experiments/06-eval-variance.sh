@@ -78,10 +78,10 @@ for SEED in $(seq 0 $((PASSES - 1))); do
 	fi
 
 	if [[ -z "$REASON" ]]; then
-		echo "PASS  (seed $SEED): $RESPONSE"
+		echo "PASS (seed $SEED): $RESPONSE"
 		PASS_COUNT=$((PASS_COUNT + 1))
 	else
-		echo "FAIL  (seed $SEED, $REASON): $RESPONSE"
+		echo "FAIL (seed $SEED, $REASON): $RESPONSE"
 	fi
 done
 

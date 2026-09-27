@@ -72,12 +72,12 @@ for SEED in $(seq 0 $((PASSES - 1))); do
 	VERDICT=$(claude -p "$JUDGE_PROMPT" --allowedTools "")
 
 	if utils::contains_ci "$VERDICT" "pass"; then
-		echo "PASS  (seed $SEED): $RESPONSE"
+		echo "PASS (seed $SEED): $RESPONSE"
 		PASS_COUNT=$((PASS_COUNT + 1))
 	elif utils::contains_ci "$VERDICT" "fail"; then
-		echo "FAIL  (seed $SEED, judge said \"$VERDICT\"): $RESPONSE"
+		echo "FAIL (seed $SEED, judge said \"$VERDICT\"): $RESPONSE"
 	else
-		echo "UNKNOWN  (seed $SEED, judge said \"$VERDICT\"): $RESPONSE"
+		echo "UNKNOWN (seed $SEED, judge said \"$VERDICT\"): $RESPONSE"
 	fi
 done
 

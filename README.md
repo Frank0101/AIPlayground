@@ -54,7 +54,7 @@ pattern.
 |  06 | [`06-eval-variance.sh`](experiments/06-eval-variance.sh)               | Runs one open-ended case five times at temperature `0.7`, using seeds 0–4 and required/forbidden keyword grading, then reports pass rate and standard deviation.                                                                                                                                                                                                                          |
 |  07 | [`07-mlx-eval.sh`](experiments/07-mlx-eval.sh)                         | Runs five examples from the published ARC-Easy benchmark through `mlx_lm.evaluate` and `lm-evaluation-harness`.                                                                                                                                                                                                                                                                           |
 |  08 | [`08-llm-judge.sh`](experiments/08-llm-judge.sh)                       | Runs the same seeded evaluation pattern as experiment 06, but sends each generated answer and an explicit rubric to Claude for a `PASS`/`FAIL` judgment. This is the only experiment that sends generated content to a third-party service.<br><sub>\* Requires the [`claude` CLI](https://docs.anthropic.com/en/docs/claude-code/overview), authenticated and available on `PATH`.</sub> |
-|  09 | [`09-guardrail.sh`](experiments/09-guardrail.sh)                       | Applies a case-insensitive blocked-word check before inference, demonstrating both a fixed refusal and a prompt that reaches the model.                                                                                                                                                                                                                                                   |
+|  09 | [`09-guardrail.sh`](experiments/09-guardrail.sh)                       | Applies case-insensitive blocked-word checks to the prompt before inference and to the response after it, demonstrating a refused prompt, a withheld response, and one that passes both.                                                                                                                                                                                                  |
 |  10 | [`10-tool-calling.sh`](experiments/10-tool-calling.sh)                 | Describes an exchange-rate tool in the system prompt and lets the model decide whether each question needs it; the script validates and runs any tool call, then feeds the result back for a final answer.<br><sub>\* Requires `curl`, `jq`, and internet access to fetch exchange rates.</sub>                                                                                           |
 
 Experiments 03 and 04 are interactive. The others run their predefined prompts
@@ -138,13 +138,14 @@ and exit on their own.
 
 ### Safety & guardrails
 
-- **Guardrail**: a check applied _before_ (or instead of) generation — e.g.
-  refusing a prompt that contains a blocked word — rather than grading
-  output _after_ generation like an eval does.
+- **Guardrail**: a check that stops a prompt from reaching the model, or a
+  response from reaching the user — e.g. refusing a prompt, or withholding
+  a response, that contains a blocked word. An eval also inspects output,
+  but only to grade it, not to block it.
 - **Constrained decoding**: restricting what a model is allowed to generate
   token by token during generation itself (e.g. forcing valid JSON, or one
-  of a fixed set of choices) — unlike a guardrail, which only inspects the
-  prompt beforehand, or an eval, which only inspects the output afterward.
+  of a fixed set of choices) — unlike a guardrail or an eval, which only
+  inspect the prompt before generation or the finished output after it.
   `mlx_lm.generate` has no built-in support for this; it would need an
   extra library hooked into the model's logits (e.g. `outlines`).
 
