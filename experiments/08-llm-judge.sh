@@ -3,7 +3,7 @@ set -e
 source "$(dirname "$0")/lib.sh"
 cd "$(dirname "$0")/.."
 
-# Experiment 8: the same PASSES-at-temp>0 setup as experiment 6, but graded
+# Experiment 08: the same PASSES-at-temp>0 setup as experiment 06, but graded
 # by Claude as judge instead of required/forbidden keyword lists.
 #
 # The judge needs the same "what counts as correct" context those lists
@@ -11,7 +11,7 @@ cd "$(dirname "$0")/.."
 # would just be Claude's own unguided opinion. Unlike every other
 # experiment here, judging is NOT local: `claude -p` sends each answer to
 # Anthropic's servers and consumes your Claude usage.
-utils::title "#8: LLM Judge"
+utils::title "#08: LLM Judge"
 
 VENV=".venv"
 utils::check_requirements "$VENV"
@@ -61,9 +61,9 @@ for SEED in $(seq 0 $((PASSES - 1))); do
 	)
 	OFFLINE=1
 
-	JUDGE_PROMPT="Question: $PROMPT"$'\n'
+	JUDGE_PROMPT="Question: $PROMPT"$'\n\n'
 	JUDGE_PROMPT+="Answer: $RESPONSE"$'\n\n'
-	JUDGE_PROMPT+="$RUBRIC"$'\n'
+	JUDGE_PROMPT+="$RUBRIC"$'\n\n'
 	JUDGE_PROMPT+="Does the answer meet this bar? Respond with exactly one word: PASS or FAIL."
 
 	# --allowedTools "" stops the judge from invoking any tools (it only

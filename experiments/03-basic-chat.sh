@@ -3,15 +3,15 @@ set -e
 source "$(dirname "$0")/lib.sh"
 cd "$(dirname "$0")/.."
 
-# Experiment 3: a back-and-forth conversation, unlike experiments 1 and 2
+# Experiment 03: a back-and-forth conversation, unlike experiments 01 and 02
 # where a single prompt gets a single reply. mlx_lm.chat already handles
-# this out of the box (see experiment 4) — we build the loop ourselves on
+# this out of the box (see experiment 04) — we build the loop ourselves on
 # top of stateless mlx_lm.generate to see how it works.
 #
 # Each turn appends to a growing HISTORY string re-sent as the whole prompt
 # (sent as one plain-text block, not distinct role-tagged turns), so replies
 # get slower as the conversation grows and more text must be re-processed.
-utils::title "#3: Basic Chat"
+utils::title "#03: Basic Chat"
 
 VENV=".venv"
 utils::check_requirements "$VENV"

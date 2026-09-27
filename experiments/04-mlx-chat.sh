@@ -3,15 +3,15 @@ set -e
 source "$(dirname "$0")/lib.sh"
 cd "$(dirname "$0")/.."
 
-# Experiment 4: the same back-and-forth conversation as experiment 3, but
+# Experiment 04: the same back-and-forth conversation as experiment 03, but
 # using mlx_lm.chat — the multi-turn tool built into MLX-LM — instead of a
 # hand-rolled HISTORY loop, to compare the two.
 #
-# Unlike experiment 3's growing plain-text block, mlx_lm.chat sends each
+# Unlike experiment 03's growing plain-text block, mlx_lm.chat sends each
 # turn through the model's real chat template and reuses a cached KV state
 # across turns. It also runs its own REPL, with 'q' to exit, so there's
 # nothing left for this script to manage once it starts.
-utils::title "#4: Chat (mlx_lm.chat)"
+utils::title "#04: Chat (mlx_lm.chat)"
 
 VENV=".venv"
 utils::check_requirements "$VENV"

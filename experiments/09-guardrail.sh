@@ -3,7 +3,7 @@ set -e
 source "$(dirname "$0")/lib.sh"
 cd "$(dirname "$0")/.."
 
-# Experiment 9: a keyword-based guardrail, distinct from both prior ideas.
+# Experiment 09: a keyword-based guardrail, distinct from both prior ideas.
 #
 # Evals (05, 06, 07, 08) grade the model's own output after generation;
 # constrained decoding (discussed but not built here) restricts what the
@@ -11,7 +11,7 @@ cd "$(dirname "$0")/.."
 # it inspects the prompt BEFORE generation and returns a fixed refusal
 # without calling the model. Simple, but blunt — it can't tell intent
 # from wording, so it blocks any prompt containing the word.
-utils::title "#9: Guardrail"
+utils::title "#09: Guardrail"
 
 VENV=".venv"
 utils::check_requirements "$VENV"
@@ -22,8 +22,6 @@ utils::init_cache_cleanup "$CACHE"
 MODEL="mlx-community/Llama-3.2-3B-Instruct-4bit"
 MAX_TOKENS=300
 TEMP=0.7
-
-REFUSAL="I can't talk about this."
 
 # Case-insensitive: any prompt containing one of these gets refused without
 # reaching the model.
@@ -39,13 +37,17 @@ utils::print_config \
 	"Model: $MODEL" \
 	"Maximum output tokens: $MAX_TOKENS" \
 	"Sampling temperature: $TEMP" \
-	"Blocked words: ${BLOCKED_WORDS[*]}"
+	"Blocked words: ${BLOCKED_WORDS[*]}" \
+	"Test prompts: ${#TEST_PROMPTS[@]}"
 
 utils::title "Begin experiment"
 
+REFUSAL="I can't talk about this."
 OFFLINE=0
 
 for PROMPT in "${TEST_PROMPTS[@]}"; do
+	echo "Prompt: $PROMPT"
+
 	BLOCKED=""
 	for WORD in "${BLOCKED_WORDS[@]}"; do
 		if utils::contains_ci "$PROMPT" "$WORD"; then
@@ -53,8 +55,6 @@ for PROMPT in "${TEST_PROMPTS[@]}"; do
 			break
 		fi
 	done
-
-	echo "Prompt: $PROMPT"
 
 	if [[ -n "$BLOCKED" ]]; then
 		echo "Response: $REFUSAL  (blocked word \"$BLOCKED\" — model not called)"
@@ -68,6 +68,7 @@ for PROMPT in "${TEST_PROMPTS[@]}"; do
 				--verbose False
 		)
 		OFFLINE=1
+
 		echo "Response: $RESPONSE"
 	fi
 	echo

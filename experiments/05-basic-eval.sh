@@ -3,15 +3,15 @@ set -e
 source "$(dirname "$0")/lib.sh"
 cd "$(dirname "$0")/.."
 
-# Experiment 5: a minimal custom eval — a handful of prompts with known-good
+# Experiment 05: a minimal custom eval — a handful of prompts with known-good
 # answers, scored by checking whether the expected text shows up in the
 # model's response. mlx_lm.evaluate wraps a standard benchmark harness
-# instead (see experiment 7) — this hand-rolls it to see how it works.
+# instead (see experiment 07) — this hand-rolls it to see how it works.
 #
 # Grading is case-insensitive substring matching, so prompts are phrased
 # for a short, unambiguous answer. Temp 0 (greedy) keeps scores
 # reproducible between runs.
-utils::title "#5: Basic Eval"
+utils::title "#05: Basic Eval"
 
 VENV=".venv"
 utils::check_requirements "$VENV"

@@ -3,15 +3,15 @@ set -e
 source "$(dirname "$0")/lib.sh"
 cd "$(dirname "$0")/.."
 
-# Experiment 6: how a non-zero temperature affects eval reliability.
+# Experiment 06: how a non-zero temperature affects eval reliability.
 #
-# Unlike experiment 5's single greedy run, this runs one question PASSES
+# Unlike experiment 05's single greedy run, this runs one question PASSES
 # times at temp > 0 with a different --seed each pass, so the whole
 # experiment is reproducible even though each pass isn't. Grading checks
 # two keyword lists: every REQUIRED_KEYWORDS entry must appear, and no
 # FORBIDDEN_KEYWORDS entry may — rejecting specific wrong answers, not
 # just checking for a right one.
-utils::title "#6: Eval Variance"
+utils::title "#06: Eval Variance"
 
 VENV=".venv"
 utils::check_requirements "$VENV"

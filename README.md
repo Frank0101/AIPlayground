@@ -4,7 +4,7 @@ A personal playground for running language models locally and exploring
 sampling, chat, evaluation, and guardrails, primarily using
 [MLX](https://github.com/ml-explore/mlx) on Apple Silicon.
 
-The repository currently contains nine experiments. They all use the 4-bit
+The repository currently contains ten experiments. They all use the 4-bit
 MLX build of Meta's Llama 3.2 3B Instruct model; experiment 08 additionally
 uses Claude as a remote judge.
 
@@ -13,8 +13,9 @@ uses Claude as a remote judge.
 - A Mac with Apple Silicon
 - Python 3
 - Internet access to download models and benchmark data
-- The [`claude` CLI](https://docs.anthropic.com/en/docs/claude-code/overview),
-  authenticated and available on `PATH`, for experiment 08 only
+
+Some experiments have additional requirements, listed under their
+description in the [Experiments](#experiments) table.
 
 ## Usage
 
@@ -43,17 +44,18 @@ pattern.
 
 ## Experiments
 
-|   # | Script                                                                 | What it demonstrates                                                                                                                                                                                                                        |
-| --: | ---------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-|  01 | [`01-running-local-model.sh`](experiments/01-running-local-model.sh)   | Downloads and runs a quantised open-weight model with `mlx_lm.generate`. It uses greedy decoding (`temp 0`) for an effectively deterministic baseline.                                                                                      |
-|  02 | [`02-sampling-temperature.sh`](experiments/02-sampling-temperature.sh) | Repeats experiment 01 at temperature `0.7` to show how sampling produces varied responses.                                                                                                                                                  |
-|  03 | [`03-basic-chat.sh`](experiments/03-basic-chat.sh)                     | Builds a multi-turn REPL over stateless `mlx_lm.generate`, manually appending and resending a plain-text transcript. Enter `exit`, `quit`, or an empty line to stop.                                                                        |
-|  04 | [`04-mlx-chat.sh`](experiments/04-mlx-chat.sh)                         | Uses MLX-LM's built-in `mlx_lm.chat` REPL, chat template, and KV cache instead of a hand-rolled loop. Enter `q` to stop.                                                                                                                    |
-|  05 | [`05-basic-eval.sh`](experiments/05-basic-eval.sh)                     | Runs four deterministic, hand-written question-and-answer cases and grades them with case-insensitive substring matching.                                                                                                                   |
-|  06 | [`06-eval-variance.sh`](experiments/06-eval-variance.sh)               | Runs one open-ended case five times at temperature `0.7`, using seeds 0–4 and required/forbidden keyword grading, then reports pass rate and standard deviation.                                                                            |
-|  07 | [`07-mlx-eval.sh`](experiments/07-mlx-eval.sh)                         | Runs five examples from the published ARC-Easy benchmark through `mlx_lm.evaluate` and `lm-evaluation-harness`.                                                                                                                             |
-|  08 | [`08-llm-judge.sh`](experiments/08-llm-judge.sh)                       | Runs the same seeded evaluation pattern as experiment 06, but sends each generated answer and an explicit rubric to Claude for a `PASS`/`FAIL` judgment. This is the only experiment that sends generated content to a third-party service. |
-|  09 | [`09-guardrail.sh`](experiments/09-guardrail.sh)                       | Applies a case-insensitive blocked-word check before inference, demonstrating both a fixed refusal and a prompt that reaches the model.                                                                                                     |
+|   # | Script                                                                 | What it demonstrates                                                                                                                                                                                                                                                                                                                                                                      |
+| --: | ---------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+|  01 | [`01-running-local-model.sh`](experiments/01-running-local-model.sh)   | Downloads and runs a quantised open-weight model with `mlx_lm.generate`. It uses greedy decoding (`temp 0`) for an effectively deterministic baseline.                                                                                                                                                                                                                                    |
+|  02 | [`02-sampling-temperature.sh`](experiments/02-sampling-temperature.sh) | Repeats experiment 01 at temperature `0.7` to show how sampling produces varied responses.                                                                                                                                                                                                                                                                                                |
+|  03 | [`03-basic-chat.sh`](experiments/03-basic-chat.sh)                     | Builds a multi-turn REPL over stateless `mlx_lm.generate`, manually appending and resending a plain-text transcript. Enter `exit`, `quit`, or an empty line to stop.                                                                                                                                                                                                                      |
+|  04 | [`04-mlx-chat.sh`](experiments/04-mlx-chat.sh)                         | Uses MLX-LM's built-in `mlx_lm.chat` REPL, chat template, and KV cache instead of a hand-rolled loop. Enter `q` to stop.                                                                                                                                                                                                                                                                  |
+|  05 | [`05-basic-eval.sh`](experiments/05-basic-eval.sh)                     | Runs four deterministic, hand-written question-and-answer cases and grades them with case-insensitive substring matching.                                                                                                                                                                                                                                                                 |
+|  06 | [`06-eval-variance.sh`](experiments/06-eval-variance.sh)               | Runs one open-ended case five times at temperature `0.7`, using seeds 0–4 and required/forbidden keyword grading, then reports pass rate and standard deviation.                                                                                                                                                                                                                          |
+|  07 | [`07-mlx-eval.sh`](experiments/07-mlx-eval.sh)                         | Runs five examples from the published ARC-Easy benchmark through `mlx_lm.evaluate` and `lm-evaluation-harness`.                                                                                                                                                                                                                                                                           |
+|  08 | [`08-llm-judge.sh`](experiments/08-llm-judge.sh)                       | Runs the same seeded evaluation pattern as experiment 06, but sends each generated answer and an explicit rubric to Claude for a `PASS`/`FAIL` judgment. This is the only experiment that sends generated content to a third-party service.<br><sub>\* Requires the [`claude` CLI](https://docs.anthropic.com/en/docs/claude-code/overview), authenticated and available on `PATH`.</sub> |
+|  09 | [`09-guardrail.sh`](experiments/09-guardrail.sh)                       | Applies a case-insensitive blocked-word check before inference, demonstrating both a fixed refusal and a prompt that reaches the model.                                                                                                                                                                                                                                                   |
+|  10 | [`10-tool-calling.sh`](experiments/10-tool-calling.sh)                 | Describes an exchange-rate tool in the system prompt and lets the model decide whether each question needs it; the script validates and runs any tool call, then feeds the result back for a final answer.<br><sub>\* Requires `curl`, `jq`, and internet access to fetch exchange rates.</sub>                                                                                           |
 
 Experiments 03 and 04 are interactive. The others run their predefined prompts
 and exit on their own.
