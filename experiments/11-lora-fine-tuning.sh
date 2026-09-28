@@ -67,6 +67,18 @@ GENERAL_PAIRS=(
 	"What is 7 times 6?|||7 times 6 is 42."
 )
 
+# Never trained on, only measured during training to compute the validation
+# loss: new wordings of the facts plus new general questions, in the same mix
+# as training. Kept separate from CASES, which stays the final test.
+VALID_PAIRS=(
+	"Where can I find the Veltrano Institute?|||The Veltrano Institute is in Trieste, Italy."
+	"Who created the Veltrano Institute?|||It was created by Dr. Mira Kastel."
+	"Since when has the Veltrano Institute existed?|||The Veltrano Institute has existed since 2019."
+	"What is the Veltrano Institute's robot called?|||Its robot is called Quillfish."
+	"Who founded Apple?|||Apple was founded by Steve Jobs, Steve Wozniak and Ronald Wayne."
+	"What is the capital of Spain?|||The capital of Spain is Madrid."
+)
+
 # Graded before and after training, as "prompt|||expected substring". The fact
 # questions are worded differently from FACT_PAIRS; the last one is a control
 # the model should answer correctly either way.
@@ -85,6 +97,7 @@ utils::print_config \
 	"Learning rate: $LEARNING_RATE" \
 	"Fact pairs: ${#FACT_PAIRS[@]}" \
 	"General pairs: ${#GENERAL_PAIRS[@]}" \
+	"Validation pairs: ${#VALID_PAIRS[@]}" \
 	"Cases: ${#CASES[@]}"
 
 utils::title "Begin experiment"
@@ -94,15 +107,17 @@ ADAPTER="$CACHE/adapter"
 ADAPTER_ARGS=()
 OFFLINE=0
 
-# mlx_lm.lora reads chat-format JSONL, one conversation per line. It also needs
-# a validation set; with this little data we reuse the training pairs, so the
-# validation loss only tracks how well they're memorised.
+# mlx_lm.lora reads chat-format JSONL, one conversation per line: a user
+# message with the question and an assistant message with the answer.
 mkdir -p "$DATA"
 for PAIR in "${FACT_PAIRS[@]}" "${GENERAL_PAIRS[@]}"; do
 	jq -nc --arg q "${PAIR%%|||*}" --arg a "${PAIR##*|||}" \
 		'{messages: [{role: "user", content: $q}, {role: "assistant", content: $a}]}'
 done >"$DATA/train.jsonl"
-cp "$DATA/train.jsonl" "$DATA/valid.jsonl"
+for PAIR in "${VALID_PAIRS[@]}"; do
+	jq -nc --arg q "${PAIR%%|||*}" --arg a "${PAIR##*|||}" \
+		'{messages: [{role: "user", content: $q}, {role: "assistant", content: $a}]}'
+done >"$DATA/valid.jsonl"
 
 for STAGE in "Before training" "After training"; do
 	if [[ "$STAGE" == "After training" ]]; then
@@ -119,6 +134,11 @@ for STAGE in "Before training" "After training"; do
 		# but can overshoot and become unstable; lower is steadier but slower.
 		# 1e-4 is a common starting point for LoRA.
 		#
+		# --steps-per-eval 50 also measures the loss on VALID_PAIRS every 50
+		# steps, printed as "Val loss". It should fall along with the training
+		# loss; if it stalls or rises while the training loss keeps falling,
+		# the model is memorising rather than learning, i.e. overfitting.
+		#
 		# --mask-prompt computes the loss on the answers only, so training
 		# teaches the model what to reply rather than to reproduce questions.
 		HF_HOME="$CACHE" HF_HUB_OFFLINE="$OFFLINE" \
@@ -129,6 +149,7 @@ for STAGE in "Before training" "After training"; do
 			--adapter-path "$ADAPTER" \
 			--iters "$ITERS" \
 			--learning-rate "$LEARNING_RATE" \
+			--steps-per-eval 50 \
 			--mask-prompt \
 			--seed 0
 

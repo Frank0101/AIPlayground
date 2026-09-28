@@ -174,6 +174,12 @@ and exit on their own.
   loss (how far the model's replies are from the training answers) and
   nudges the weights to reduce it; the learning rate is how big each nudge
   is, and the iterations are how many nudges are made.
+- **Validation set / validation loss**: examples held out from training and
+  only measured, never trained on. Their loss shows whether learning carries
+  over to unseen questions: if it stops falling while the training loss keeps
+  dropping, the model is memorising rather than learning. It's computed by
+  scoring how likely the model finds each reference answer, token by token,
+  not by generating text.
 - **Overfitting**: training so narrowly that the model applies what it
   learned where it doesn't belong — e.g. answering every question with the
   new fact. Mixing ordinary examples into the training data guards against
