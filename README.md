@@ -73,6 +73,16 @@ and exit on their own.
 - **Quantisation**: storing model parameters at reduced numerical precision
   (e.g. 4-bit) to shrink size and memory use, at a small cost to quality.
 
+### Harness
+
+- **Harness**: the code around a model that turns single calls into a
+  working system — sending prompts, keeping the conversation history,
+  checking inputs and outputs, running the tools the model asks for. The
+  model itself only maps text to text; everything else is the harness
+  (experiments 03, 09 and 10). An evaluation harness such as
+  `lm-evaluation-harness` is one specialised for running benchmarks
+  (experiment 07).
+
 ### Generation & sampling
 
 - **Inference**: using a trained model to generate output, as opposed
@@ -152,13 +162,6 @@ and exit on their own.
 
 ### Tooling
 
-- **Harness**: the code around a model that turns single calls into a
-  working system — sending prompts, keeping the conversation history,
-  checking inputs and outputs, running the tools the model asks for. The
-  model itself only maps text to text; everything else is the harness
-  (experiments 03, 09 and 10). An evaluation harness such as
-  `lm-evaluation-harness` is one specialised for running benchmarks
-  (experiment 07).
 - **Hugging Face**: a platform/repository where models, datasets, and
   tokenisers are published and downloaded from. By default, loading a model
   checks the Hub for the current file list/etags even if it's already
