@@ -150,6 +150,8 @@ The sections below cover the points that are easy to get wrong.
   makes it easier to read. Leave it long when wrapping would add more
   clutter than it saves, e.g. a line only a few characters over, an
   `echo` of one output line, or an array entry (`CASES`, `TEST_PROMPTS`).
+  When lines do run long (e.g. array entries), keep them of similar length:
+  trim the outliers rather than let a few run far past the rest.
 - **A long single-line string wraps with `""\`** (e.g. `PROMPT` in
   01/02, `RUBRIC` in 08):
 
