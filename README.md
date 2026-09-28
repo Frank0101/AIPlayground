@@ -164,7 +164,12 @@ and exit on their own.
 ### Training
 
 - **Fine-tuning**: training an already-trained model further on your own
-  examples, to change what it knows or how it behaves.
+  examples, to change what it knows or how it behaves. It's reliable for
+  behaviour and style but brittle for adding facts: with little data the
+  model also picks up surface patterns (which answers are frequent, which
+  phrasings go together), so results shift with the data's balance and the
+  amount of training — see experiment 11. Giving the model new facts in the
+  prompt instead is the usual, more reliable approach.
 - **LoRA (Low-Rank Adaptation)**: fine-tuning that leaves the model's weights
   frozen and trains a small adapter instead — extra matrices inside some
   layers that add a correction to their output. The adapter is a few MB,
