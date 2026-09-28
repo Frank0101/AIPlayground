@@ -1,10 +1,10 @@
 # AIPlayground
 
 A personal playground for running language models locally and exploring
-sampling, chat, evaluation, guardrails, and tool calling, primarily using
-[MLX](https://github.com/ml-explore/mlx) on Apple Silicon.
+sampling, chat, evaluation, guardrails, tool calling, and fine-tuning,
+primarily using [MLX](https://github.com/ml-explore/mlx) on Apple Silicon.
 
-The repository currently contains ten experiments. They all use the 4-bit
+The repository currently contains eleven experiments. They all use the 4-bit
 MLX build of Meta's Llama 3.2 3B Instruct model; experiment 08 additionally
 uses Claude as a remote judge, and experiment 10 calls a public
 exchange-rate API as a tool.
@@ -57,6 +57,7 @@ pattern.
 |  08 | [`08-llm-judge.sh`](experiments/08-llm-judge.sh)                       | Runs the same seeded evaluation pattern as experiment 06, but sends each generated answer and an explicit rubric to Claude for a `PASS`/`FAIL` judgment. This is the only experiment that sends generated answers to a third-party service.<br><sub>\* Requires the [`claude` CLI](https://docs.anthropic.com/en/docs/claude-code/overview), authenticated and available on `PATH`.</sub> |
 |  09 | [`09-guardrail.sh`](experiments/09-guardrail.sh)                       | Applies case-insensitive blocked-word checks to the prompt before inference and to the response after it, demonstrating a refused prompt, a withheld response, and one that passes both.                                                                                                                                                                                                  |
 |  10 | [`10-tool-calling.sh`](experiments/10-tool-calling.sh)                 | Describes the available tools (an exchange-rate API) as JSON in the system prompt and lets the model decide whether each question needs one; the script validates and runs any tool call, then replays the exchange with the tool's result for a final answer.<br><sub>\* Requires `curl`, `jq`, and internet access to fetch exchange rates.</sub>                                       |
+|  11 | [`11-lora-fine-tuning.sh`](experiments/11-lora-fine-tuning.sh)         | Teaches the model an invented fact by training a LoRA adapter on a few dozen question/answer pairs, mixed with ordinary ones so it doesn't answer everything with the new fact, then compares its answers to reworded questions and a control question before and after training.<br><sub>\* Requires `jq`.</sub>                                                                         |
 
 Experiments 03 and 04 are interactive. The others run their predefined prompts
 and exit on their own.
@@ -159,6 +160,24 @@ and exit on their own.
   inspect the prompt before generation or the finished output after it.
   `mlx_lm.generate` has no built-in support for this; it would need an
   extra library hooked into the model's logits (e.g. `outlines`).
+
+### Training
+
+- **Fine-tuning**: training an already-trained model further on your own
+  examples, to change what it knows or how it behaves.
+- **LoRA (Low-Rank Adaptation)**: fine-tuning that leaves the model's weights
+  frozen and trains a small adapter instead — extra matrices inside some
+  layers that add a correction to their output. The adapter is a few MB,
+  loaded alongside the model, and removing it restores the original model —
+  see experiment 11.
+- **Loss / learning rate / iterations**: training repeatedly measures the
+  loss (how far the model's replies are from the training answers) and
+  nudges the weights to reduce it; the learning rate is how big each nudge
+  is, and the iterations are how many nudges are made.
+- **Overfitting**: training so narrowly that the model applies what it
+  learned where it doesn't belong — e.g. answering every question with the
+  new fact. Mixing ordinary examples into the training data guards against
+  it.
 
 ### Tooling
 
