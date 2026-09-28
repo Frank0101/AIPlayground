@@ -1,13 +1,13 @@
 ---
 name: mlx-experiment
-description: Create a new numbered script in experiments/ (MLX-LM demos of local-model behavior, e.g. sampling temperature, chat, evals, guardrails, LLM-as-judge, tool calling) or refactor an existing one to match the conventions this repo settled on. Use this whenever the user asks to add a new experiment, port an old experiment to the current format, renumber experiments, or add a function to experiments/lib.sh.
+description: Create a new numbered script in experiments/ (MLX-LM demos of local-model behavior, e.g. sampling temperature, chat, evals, guardrails, LLM-as-judge, tool calling, fine-tuning) or refactor an existing one to match the conventions this repo settled on. Use this whenever the user asks to add a new experiment, port an old experiment to the current format, renumber experiments, or add a function to experiments/lib.sh.
 ---
 
 # MLX experiment format
 
 `experiments/*.sh` are small, self-contained demo scripts showing one MLX-LM
 behavior each (temperature, chat history, evals, guardrails, judge grading,
-tool calling, ...). They share a common shape and a small shared library,
+tool calling, fine-tuning, ...). They share a common shape and a small shared library,
 `experiments/lib.sh`. This skill captures that shape so a new experiment or
 a refactor of an old one doesn't have to re-derive it from scratch.
 

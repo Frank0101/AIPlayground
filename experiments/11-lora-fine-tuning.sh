@@ -3,14 +3,14 @@ set -e
 source "$(dirname "$0")/lib.sh"
 cd "$(dirname "$0")/.."
 
-# Experiment 11: fine-tuning with LoRA to teach the model a fact it can't know
-# (an invented research institute), then checking that it now knows it.
+# Experiment 11: fine-tuning with LoRA to teach the model facts it can't know
+# (about an invented research institute), then checking that it now knows them.
 #
 # LoRA freezes the model's weights and trains a small adapter: extra matrices
 # inside some layers that correct their output (drop --adapter-path and the
-# model is exactly as before). Ordinary questions are mixed into training so it
-# doesn't answer everything with the new fact, which a control question checks;
-# test questions are worded unlike the training ones, to test the fact itself.
+# model is exactly as before). Test questions are worded unlike the training
+# ones, so passing means the facts were learned; ordinary questions mixed into
+# training keep it from bringing them up everywhere, as a control case checks.
 utils::title "#11: LoRA Fine-Tuning"
 
 VENV=".venv"
@@ -130,7 +130,7 @@ done >"$DATA/valid.jsonl"
 
 for STAGE in "Before training" "After training"; do
 	if [[ "$STAGE" == "After training" ]]; then
-		utils::title "Training LoRA adapter" "This takes a minute or two.."
+		utils::title "Training LoRA adapter" "This takes a few minutes.."
 
 		# ITERS is how many training steps to run. Each step feeds the model a
 		# small batch of training pairs (4 by default), measures the loss (how

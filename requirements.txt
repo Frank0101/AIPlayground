@@ -1,5 +1,6 @@
 # mlx-lm: download, run, quantise, evaluate, and fine-tune language models
-# locally on Apple Silicon via Apple's MLX framework. The [train] extra adds
-# the dependencies needed for fine-tuning (LoRA/QLoRA); [evaluate] adds
+# locally on Apple Silicon via Apple's MLX framework. LoRA/QLoRA fine-tuning
+# (mlx_lm.lora) is built in; the [train] extra adds helpers it can use, such
+# as Hugging Face datasets for training on Hub-hosted data. [evaluate] adds
 # lm-evaluation-harness, used by mlx_lm.evaluate for standard benchmarks.
 mlx-lm[train,evaluate]==0.31.3
